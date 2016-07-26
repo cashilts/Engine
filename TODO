@@ -1,0 +1,5 @@
+To Do:
+-Import current engine code into repo
+-Update gl window creation to work on all OS
+-Move rendering functions into seperate class
+-Create support for glDrawArrays()
