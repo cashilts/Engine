@@ -1,5 +1,7 @@
 To Do:
--Import current engine code into repo
--Update gl window creation to work on all OS
+-Implement BOOST library for platform independant file navigation
+-Implement SOIL library for texture loading
+-Create matrix and vector classes
+-Create class for game objects  
 -Move rendering functions into seperate class
 -Create support for glDrawArrays()
