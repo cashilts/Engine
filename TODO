@@ -3,5 +3,4 @@ To Do:
 -Implement SOIL library for texture loading
 -Create matrix and vector classes
 -Create class for game objects  
--Move rendering functions into seperate class
 -Create support for glDrawArrays()
