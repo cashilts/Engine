@@ -9,23 +9,16 @@
 //For general multiplatform support
 #include "SDL.h"
 
+#include "Renderer.h"1
 
-//Open GL libraries
-#include <GL/glew.h>
-#include <GL/glut.h>
-#include <GL/GL.h>
+
 
 
 
 using namespace std;
 
 
-bool drawGlScene()
-{
-	glClearColor(1.0, 0.0, 0.0, 1.0);
-	glClear(GL_COLOR_BUFFER_BIT);
-	return true;
-}
+
 
 
 //Entry point
