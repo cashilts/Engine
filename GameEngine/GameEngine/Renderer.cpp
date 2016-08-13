@@ -7,92 +7,58 @@
 
 
 #include <vector>
-#include <glm.hpp>
 
-bool drawGlScene()
+
+bool Renderer::drawGlScene()
 {
-	glClearColor(1.0, 0.0, 0.0, 1.0);
+	glClearColor(0.0, 0.0, 1.0, 0.5);
 	glClear(GL_COLOR_BUFFER_BIT);
 	return true;
 }
 
-bool loadObjFromFile(const char* filename, std::vector<glm::vec3> &verticies, std::vector<glm::vec2> &uvs, std::vector<glm::vec3> &normals)
+void Renderer::initGl()
 {
-	std::vector<unsigned int> vertexIndices, uvIndices, normalIndices;
-	std::vector<glm::vec3> temp_verticies;
-	std::vector<glm::vec3> temp_normals;
-	std::vector<glm::vec2> temp_uvs;
+	//Size the open gl viewport to be the same size as the window
+	glViewport(0, 0, 640, 480);
+	//Change projection matrix based on window size
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluPerspective(45.0f, (GLfloat)640 / (GLfloat)480, 0.1f, 100.0f);
+	//Load the model view matrix
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
 
 
-	FILE *file;
-	errno_t e = fopen_s(&file, filename, "r");
-	if (file == NULL)
+	glShadeModel(GL_SMOOTH);
+	//glEnable(GL_TEXTURE_2D);							// Enable Texture Mapping
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE);					// Set The Blending Function For Translucency
+	glClearDepth(1.0);		// Enables Clearing Of The Depth Buffer
+	glDepthFunc(GL_LESS);								// The Type Of Depth Test To Do
+	glClearColor(0.0, 0.0, 0.0, 0.0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+}
+
+bool Renderer::drawGameObject(GameObject* obj)
+{
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glLoadIdentity();
+	glTranslatef(0.0, 0.0, -5);
+	//TODO: REMOVE!! For testing only!
+	glColor3f(1.0, 0.0, 0.0);
+	if (!obj)
 	{
 		return false;
 	}
-
-	while (1)
+	//TODO: Replace this function with Gl drawarrays version
+	glBegin(GL_TRIANGLES);
+	for (int i = 0; i < obj->verticies.size(); i++)
 	{
-		char lineHeader[128];
-		int res = fscanf_s(file, "%s", &lineHeader, sizeof(lineHeader));
-		if (res == EOF)
-		{
-			break;
-		}
-		if (strcmp(lineHeader, "v") == 0)
-		{
-			glm::vec3 vertex;
-			fscanf_s(file, "%f %f %f", &vertex.x, &vertex.y, &vertex.z);
-			temp_verticies.push_back(vertex);
-		}
-		else if (strcmp(lineHeader, "vt") == 0)
-		{
-			glm::vec2 uv;
-			fscanf_s(file, "%f %f", &uv.x, &uv.y);
-			temp_uvs.push_back(uv);
-		}
-		else if (strcmp(lineHeader, "vn") == 0)
-		{
-			glm::vec3 normal;
-			fscanf_s(file, "%f %f %f", &normal.x, &normal.y, &normal.z);
-			temp_normals.push_back(normal);
-		}
-		else if (strcmp(lineHeader, "f") == 0)
-		{
-			std::string vertex1, vertex2, vertex3;
-			unsigned int vertexIndex[3], normalIndex[3], uvIndex[3];
-			int matches = fscanf_s(file, "%d/%d/%d %d/%d/%d %d/%d/%d", &vertexIndex[0], &uvIndex[0], &normalIndex[0], &vertexIndex[1], &uvIndex[1], &normalIndex[1], &vertexIndex[2], &uvIndex[2], &normalIndex[2]);
-			if (matches != 9)
-			{
-				return false;
-			}
-			vertexIndices.push_back(vertexIndex[0]);
-			vertexIndices.push_back(vertexIndex[1]);
-			vertexIndices.push_back(vertexIndex[2]);
-			normalIndices.push_back(normalIndex[0]);
-			normalIndices.push_back(normalIndex[1]);
-			normalIndices.push_back(normalIndex[2]);
-			uvIndices.push_back(uvIndex[0]);
-			uvIndices.push_back(uvIndex[1]);
-			uvIndices.push_back(uvIndex[2]);
-		}
+		glNormal3f(obj->normals[i].x, obj->normals[i].y, obj->normals[i].z);
+		//glTexCoord2f(obj->uvs[i].x, obj->uvs[i].y);
+		glVertex3f(obj->verticies[i].x, obj->verticies[i].y, obj->verticies[i].z);
 	}
-	for (unsigned int i = 0; i < vertexIndices.size(); i++)
-	{
-		unsigned int vertexIndex = vertexIndices[i];
-		glm::vec3 vertex = temp_verticies[vertexIndex - 1];
-		verticies.push_back(vertex);
-	}
-	for (unsigned int i = 0; i < normalIndices.size(); i++)
-	{
-		unsigned int normalIndex = normalIndices[i];
-		glm::vec3 normal = temp_normals[normalIndex - 1];
-		normals.push_back(normal);
-	}
-	for (unsigned int i = 0; i < uvIndices.size(); i++)
-	{
-		unsigned int uvIndex = uvIndices[i];
-		glm::vec2 uv = temp_uvs[uvIndex - 1];
-		uvs.push_back(uv);
-	}
+	glEnd();
+	return true;
 }

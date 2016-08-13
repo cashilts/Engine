@@ -1,6 +1,7 @@
 To Do:
 -Implement BOOST library for platform independant file navigation
 -Implement SOIL library for texture loading
--Create matrix and vector classes
--Create class for game objects  
+-Create class for game objects (In progress)
+-Create GameManager and State System
+-Create Menu System 
 -Create support for glDrawArrays()
