@@ -82,11 +82,10 @@ int main(int argc, char* argv[])
 	GameObject testObject;
 	createObjectFromFile("Models/cube.obj", &testObject);
 	Renderer::initGl();
-	Renderer::drawGameObject(&testObject);
 	SDL_GL_SwapWindow(mainWindow);
 	while (!done)
 	{
-		
+		Renderer::drawGameObject(&testObject);
 		SDL_Event event;
 		while(SDL_PollEvent(&event))
 		{
@@ -95,7 +94,7 @@ int main(int argc, char* argv[])
 				done = true;
 			}
 		}
-		
+		SDL_GL_SwapWindow(mainWindow);
 	}
 	return 0;
 

@@ -8,6 +8,14 @@
 
 #include <vector>
 
+//Default lighting float arrays, these values are for testing only
+//Amient and diffuse are RGBA values, position is XYZ and the way the light points
+float Renderer::LightAmbient[] = { 0.5f,0.5f,0.5f,1 };
+float Renderer::LightDiffuse[] = { 1.0f,1.0f,1.0f,1.0f };
+float Renderer::LightPosition[] = { 0,0,0,1.0f };
+float xRot = 0;
+float yRot = 0;
+float zRot = 0;
 
 bool Renderer::drawGlScene()
 {
@@ -28,15 +36,24 @@ void Renderer::initGl()
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
+	//Initiallize lighting
+	glLightfv(GL_LIGHT0, GL_AMBIENT, LightAmbient);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, LightDiffuse);
+	glLightfv(GL_LIGHT0, GL_POSITION, LightPosition);
+	glEnable(GL_LIGHT0);
 
+	glEnable(GL_LIGHTING);
 	glShadeModel(GL_SMOOTH);
-	//glEnable(GL_TEXTURE_2D);							// Enable Texture Mapping
+	glEnable(GL_TEXTURE_2D);							// Enable Texture Mapping
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE);					// Set The Blending Function For Translucency
+	glClearColor(0.0f, 0.0f, 0.0f, 0.5f);				// This Will Clear The Background Color
 	glClearDepth(1.0);		// Enables Clearing Of The Depth Buffer
 	glDepthFunc(GL_LESS);								// The Type Of Depth Test To Do
-	glClearColor(0.0, 0.0, 0.0, 0.0);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glEnable(GL_DEPTH_TEST);							// Enables Depth Testing
+														// Enables Smooth Color Shading
+	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	
 
 }
 
@@ -45,8 +62,9 @@ bool Renderer::drawGameObject(GameObject* obj)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
 	glTranslatef(0.0, 0.0, -5);
-	//TODO: REMOVE!! For testing only!
-	glColor3f(1.0, 0.0, 0.0);
+	glRotatef(xRot, 1.0, 0, 0);
+	glRotatef(yRot, 0, 1.0, 0);
+	glRotatef(zRot, 0, 0, 1);
 	if (!obj)
 	{
 		return false;
@@ -60,5 +78,8 @@ bool Renderer::drawGameObject(GameObject* obj)
 		glVertex3f(obj->verticies[i].x, obj->verticies[i].y, obj->verticies[i].z);
 	}
 	glEnd();
+	xRot += 0.1;
+	yRot += 0.2;
+	zRot += 0.3;
 	return true;
 }

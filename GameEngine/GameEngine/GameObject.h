@@ -11,3 +11,4 @@ public:
 	
 };
 bool createObjectFromFile(const char* filename, GameObject* obj);
+bool createObjectFromNewFile(const char* filename, GameObject* obj);

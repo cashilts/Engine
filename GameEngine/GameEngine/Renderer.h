@@ -8,5 +8,8 @@ public:
 	static bool drawGameObject(GameObject* obj);
 	static void initGl();
 private:
+	static float LightAmbient[];
+	static float LightDiffuse[];
+	static float LightPosition[];
 	Renderer() {}
 };

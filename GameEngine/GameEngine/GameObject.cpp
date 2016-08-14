@@ -1,6 +1,22 @@
 
 #include "GameObject.h"
+#include "rapidxml.hpp"
+#include "rapidxml_utils.hpp"
 
+#include <iostream>
+#include <fstream>
+bool createObjectFromNewFile(const char* filename, GameObject* obj)
+{
+	rapidxml::file<> xml(filename);
+	rapidxml::xml_document<> doc;
+	doc.parse<0>(xml.data());
+	rapidxml::xml_node<> *meshNode = doc.first_node();
+	meshNode = meshNode->first_node("library_geometries", 0, true);
+	meshNode = meshNode->first_node();
+	meshNode = meshNode->first_node();
+
+	return false;
+}
 
 bool createObjectFromFile(const char* filename,GameObject* obj )
 {
@@ -22,7 +38,7 @@ bool createObjectFromFile(const char* filename,GameObject* obj )
 	{
 		return false;
 	}
-
+	
 	//Continue until EOF
 	while (1)
 	{
