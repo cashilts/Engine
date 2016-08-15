@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
 	//Begin main loop
 	bool done = false;
 	GameObject testObject;
-	createObjectFromFile("Models/cube.obj", &testObject);
+	createObjectFromNewFile("Models/cube.dae", &testObject);
 	Renderer::initGl();
 	SDL_GL_SwapWindow(mainWindow);
 	while (!done)

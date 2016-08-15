@@ -5,18 +5,102 @@
 
 #include <iostream>
 #include <fstream>
+
+int getIndexLen(const char* numStart)
+{
+	int i = 1;
+	while (true)
+	{
+		if (numStart[i] == ' ')
+		{
+			return i;
+		}
+		i++;
+	}
+}
+
 bool createObjectFromNewFile(const char* filename, GameObject* obj)
 {
+	std::vector<unsigned int> vertexIndices, uvIndices, normalIndices;
+	std::vector<glm::vec3> tempVerticies;
+	std::vector<glm::vec3> tempNormals;
+	std::vector<glm::vec2> tempUvs;
+
+	//Load from filename
 	rapidxml::file<> xml(filename);
 	rapidxml::xml_document<> doc;
-	doc.parse<0>(xml.data());
-	rapidxml::xml_node<> *meshNode = doc.first_node();
-	meshNode = meshNode->first_node("library_geometries", 0, true);
-	meshNode = meshNode->first_node();
-	meshNode = meshNode->first_node();
 
-	return false;
+	//Parse the XML file into a tree
+	doc.parse<0>(xml.data());
+
+	//Navigate so that sourceNode points at the mesh data
+	rapidxml::xml_node<> *sourceNode = doc.first_node();
+	sourceNode = sourceNode->first_node("library_geometries", 0, true);
+	sourceNode = sourceNode->first_node();//<geometry>
+	sourceNode = sourceNode->first_node();//<mesh>
+	sourceNode = sourceNode->first_node();//first <source> tag
+
+
+	char* vertexChars = sourceNode->first_node()->value();
+
+	glm::vec3 vert;
+	int num;
+	num = strlen(vertexChars);
+	for (int i = 0; i < num;)
+	{
+		sscanf_s(&vertexChars[i], "%f %f %f", &vert.x, &vert.y, &vert.z);
+		tempVerticies.push_back(vert);
+		i += getIndexLen(&vertexChars[i]) + 1;
+		i += getIndexLen(&vertexChars[i]) + 1;
+		i += getIndexLen(&vertexChars[i]) + 1;
+	}
+
+	sourceNode = sourceNode->next_sibling();
+
+	char* normalsChars = sourceNode->first_node()->value();
+
+	glm::vec3 norm;
+	num = strlen(normalsChars);
+	for (int i = 0; i < num;)
+	{
+		sscanf_s(&normalsChars[i], "%f %f %f", &norm.x, &norm.y, &norm.z);
+		tempNormals.push_back(norm);
+		i += getIndexLen(&normalsChars[i]) + 1;
+		i += getIndexLen(&normalsChars[i]) + 1;
+		i += getIndexLen(&normalsChars[i]) + 1;
+	}
+
+	sourceNode = sourceNode->next_sibling("polylist");
+	sscanf_s(sourceNode->first_attribute("count")->value(),"%d",&num);
+	char* indicies = sourceNode->first_node("p")->value();
+	unsigned int vertexIndex, normalIndex;
+	num = strlen(indicies);
+	for (int i = 0; i < num;)
+	{
+		sscanf_s(&indicies[i], "%d %d", &vertexIndex,&normalIndex);
+		vertexIndices.push_back(vertexIndex);
+		normalIndices.push_back(normalIndex);
+		i += getIndexLen(&indicies[i]) + 1;
+		i += getIndexLen(&indicies[i]) + 1;
+	}
+
+	for (unsigned int i = 0; i < vertexIndices.size(); i++)
+	{
+		unsigned int vertexIndex = vertexIndices[i];
+		glm::vec3 vertex = tempVerticies[vertexIndex];
+		obj->verticies.push_back(vertex);
+	}
+	for (unsigned int i = 0; i < normalIndices.size(); i++)
+	{
+		unsigned int normalIndex = normalIndices[i];
+		glm::vec3 normal = tempNormals[normalIndex];
+		obj->normals.push_back(normal);
+	}
+
+	return true;
 }
+
+
 
 bool createObjectFromFile(const char* filename,GameObject* obj )
 {
