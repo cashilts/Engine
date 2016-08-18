@@ -61,8 +61,12 @@ int main(int argc, char* argv[])
 		windowName = "Unix GL";
 	#endif
 
+	SDL_DisplayMode curDisplayMode;
+	SDL_GetDesktopDisplayMode(0, &curDisplayMode);
+	
+
     //Create a platform independent open GL window
-	mainWindow = SDL_CreateWindow(windowName.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 480, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+	mainWindow = SDL_CreateWindow(windowName.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, curDisplayMode.w, curDisplayMode.h, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
 	
 	//If window could not be created end the program
 	if (!mainWindow)
@@ -80,8 +84,8 @@ int main(int argc, char* argv[])
 	//Begin main loop
 	bool done = false;
 	GameObject testObject;
-	createObjectFromNewFile("Models/cube.dae", &testObject);
-	Renderer::initGl();
+	createObjectFromNewFile("Models/HDMonkey.dae", &testObject);
+	Renderer::initGl(curDisplayMode.w,curDisplayMode.h);
 	SDL_GL_SwapWindow(mainWindow);
 	while (!done)
 	{
@@ -93,9 +97,33 @@ int main(int argc, char* argv[])
 			{
 				done = true;
 			}
+			else if (event.type == SDL_MOUSEMOTION)
+			{
+				//When the mouse moves update the camera
+				int x = 0;
+				int y = 0;
+				//Get mouse coords
+				SDL_GetMouseState(&x, &y);
+
+				//Use the halfwidth of the screen, dividing the screen into a negative side and a positive
+				float halfWidth = curDisplayMode.w / 2;
+
+				//Delta angle will be within -1 to 1 regardless of screen size
+				float deltaAngle = (x - halfWidth)/halfWidth;
+
+				//Change the angle so the entire screen spans pi (180 degrees) 
+				deltaAngle *= -3.1419;
+
+				//Repeat for the Y, do not span pi entirely so the player cannot look straight up
+				float halfHeight = curDisplayMode.h / 2;
+				float deltaAngleH = (y - halfHeight) / halfHeight;
+				deltaAngleH *= -3;
+
+				//Send to the renderer
+				Renderer::setPlayerRotation(deltaAngle, deltaAngleH);
+			}
 		}
 		SDL_GL_SwapWindow(mainWindow);
 	}
 	return 0;
-
 }

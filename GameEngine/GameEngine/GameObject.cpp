@@ -40,29 +40,44 @@ bool createObjectFromNewFile(const char* filename, GameObject* obj)
 	sourceNode = sourceNode->first_node();//<mesh>
 	sourceNode = sourceNode->first_node();//first <source> tag
 
-
+	//Load the characters representing the verticies
 	char* vertexChars = sourceNode->first_node()->value();
 
+	//Temp vertex
 	glm::vec3 vert;
+	
+	//Get string length 
 	int num;
 	num = strlen(vertexChars);
 	for (int i = 0; i < num;)
 	{
+		//Scan the next 3 coordinates
 		sscanf_s(&vertexChars[i], "%f %f %f", &vert.x, &vert.y, &vert.z);
+
+		//Add the vertex into a temp list
 		tempVerticies.push_back(vert);
+
+		//Move forward in the string by the amount of characters read (once for each num read)
 		i += getIndexLen(&vertexChars[i]) + 1;
 		i += getIndexLen(&vertexChars[i]) + 1;
 		i += getIndexLen(&vertexChars[i]) + 1;
 	}
 
+	//Move to the normals source
 	sourceNode = sourceNode->next_sibling();
 
+	//Load the characters representing the normals
 	char* normalsChars = sourceNode->first_node()->value();
 
+	//Temp Normal
 	glm::vec3 norm;
+
+	//Set num to the normal length
 	num = strlen(normalsChars);
+
 	for (int i = 0; i < num;)
 	{
+		//Get the next 3 coordinates
 		sscanf_s(&normalsChars[i], "%f %f %f", &norm.x, &norm.y, &norm.z);
 		tempNormals.push_back(norm);
 		i += getIndexLen(&normalsChars[i]) + 1;

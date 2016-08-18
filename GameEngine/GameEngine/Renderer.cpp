@@ -17,6 +17,15 @@ float xRot = 0;
 float yRot = 0;
 float zRot = 0;
 
+//Player position and angle
+float xPos = 0;
+float yPos = 0;
+float zPos = 2;
+
+float angle = 3.14159;
+float angleY = 0;
+const int distance = 5;
+
 bool Renderer::drawGlScene()
 {
 	glClearColor(0.0, 0.0, 1.0, 0.5);
@@ -24,10 +33,10 @@ bool Renderer::drawGlScene()
 	return true;
 }
 
-void Renderer::initGl()
+void Renderer::initGl(int width, int height)
 {
 	//Size the open gl viewport to be the same size as the window
-	glViewport(0, 0, 640, 480);
+	glViewport(0, 0, width, height);
 	//Change projection matrix based on window size
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -59,8 +68,15 @@ void Renderer::initGl()
 
 bool Renderer::drawGameObject(GameObject* obj)
 {
+	float lookObjy = sin(angleY) * distance + yPos;
+	float xzRate = abs(cos(angleY) * distance);
+	float lookObjx = sin(angle) * xzRate + xPos;
+	float lookObjz = cos(angle) * xzRate + zPos;
+	
+
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
+	gluLookAt(xPos, yPos, zPos, lookObjx, lookObjy, lookObjz, 0, 1, 0);
 	glTranslatef(0.0, 0.0, -5);
 	glRotatef(xRot, 1.0, 0, 0);
 	glRotatef(yRot, 0, 1.0, 0);
@@ -82,4 +98,10 @@ bool Renderer::drawGameObject(GameObject* obj)
 	yRot += 0.2;
 	zRot += 0.3;
 	return true;
+}
+
+void Renderer::setPlayerRotation(float deltaAngle, float deltaAngleY)
+{
+	angle = 3.14159 + deltaAngle;
+	angleY = deltaAngleY;
 }
