@@ -72,8 +72,9 @@ bool Renderer::drawGameObject(GameObject* obj)
 	float xzRate = abs(cos(angleY) * distance);
 	float lookObjx = sin(angle) * xzRate + xPos;
 	float lookObjz = cos(angle) * xzRate + zPos;
-	
 
+	
+	
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
 	gluLookAt(xPos, yPos, zPos, lookObjx, lookObjy, lookObjz, 0, 1, 0);
@@ -81,6 +82,10 @@ bool Renderer::drawGameObject(GameObject* obj)
 	glRotatef(xRot, 1.0, 0, 0);
 	glRotatef(yRot, 0, 1.0, 0);
 	glRotatef(zRot, 0, 0, 1);
+	/*float modelMatrix[16];
+	glGetFloatv(GL_MODELVIEW_MATRIX, modelMatrix);
+	float projectionMatrix[16];
+	glGetFloatv(GL_PROJECTION_MATRIX, projectionMatrix);*/
 	if (!obj)
 	{
 		return false;
