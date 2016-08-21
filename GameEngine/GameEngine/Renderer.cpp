@@ -5,7 +5,7 @@
 
 #include "Renderer.h"
 
-
+#include "SOIL.h"
 #include <vector>
 
 //Default lighting float arrays, these values are for testing only
@@ -95,7 +95,7 @@ bool Renderer::drawGameObject(GameObject* obj)
 	for (int i = 0; i < obj->verticies.size(); i++)
 	{
 		glNormal3f(obj->normals[i].x, obj->normals[i].y, obj->normals[i].z);
-		//glTexCoord2f(obj->uvs[i].x, obj->uvs[i].y);
+		glTexCoord2f(obj->uvs[i].x, obj->uvs[i].y);
 		glVertex3f(obj->verticies[i].x, obj->verticies[i].y, obj->verticies[i].z);
 	}
 	glEnd();
@@ -109,4 +109,75 @@ void Renderer::setPlayerRotation(float deltaAngle, float deltaAngleY)
 {
 	angle = 3.14159 + deltaAngle;
 	angleY = deltaAngleY;
+}
+
+
+bool Renderer::loadTexture(char* path, int* textureId)
+{
+	*textureId = SOIL_load_OGL_texture(path, SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_INVERT_Y);
+	if (*textureId == 0)
+		return false;
+
+	glBindTexture(GL_TEXTURE_2D, *textureId);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+}
+
+void Renderer::writeText(char* text, int fontId, float x, float y, float size)
+{
+	float lookObjy = sin(angleY) * distance + yPos;
+	float xzRate = abs(cos(angleY) * distance);
+	float lookObjx = sin(angle) * xzRate + xPos;
+	float lookObjz = cos(angle) * xzRate + zPos;
+
+
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glLoadIdentity();
+	gluLookAt(xPos, yPos, zPos, lookObjx, lookObjy, lookObjz, 0, 1, 0);
+	glTranslatef(0.0, 0.0, -5);
+
+	std::vector<glm::vec3> Verticies;
+	std::vector<glm::vec2> UVs;
+	int len = strlen(text);
+	for (int i = 0; i < len; i++)
+	{
+		glm::vec3 topLeftVert = glm::vec3(x + i*size, y + size, 0);
+		glm::vec3 topRightVert = glm::vec3(x + i*size + size, y + size, 0);
+		glm::vec3 bottomRightVert = glm::vec3(x + i*size + size, y, 0);
+		glm::vec3 bottomLeftVert = glm::vec3(x + i*size, y, 0);
+
+		Verticies.push_back(topLeftVert);
+		Verticies.push_back(bottomLeftVert);
+		Verticies.push_back(topRightVert);
+
+		Verticies.push_back(bottomRightVert);
+		Verticies.push_back(topRightVert);
+		Verticies.push_back(bottomLeftVert);
+
+		char character = text[i];
+		float uvX = (character % 16) / 16.0f;
+		float uvY = (character / 16) / 16.0f;
+
+		glm::vec2 topLeftUV = glm::vec2(uvX, 1 - uvY);
+		glm::vec2 topRIghtUV = glm::vec2(uvX+1/16, 1 - uvY);
+		glm::vec2 bottomRightUV = glm::vec2(uvX+1/16, 1 - (uvY+1.0f/16.0f));
+		glm::vec2 bottomLeftUV = glm::vec2(uvX, 1 - (uvY + 1.0f / 16.0f));
+
+		UVs.push_back(topLeftUV);
+		UVs.push_back(bottomLeftUV);
+		UVs.push_back(topRIghtUV);
+
+		UVs.push_back(bottomRightUV);
+		UVs.push_back(topRIghtUV);
+		UVs.push_back(bottomLeftUV);
+	}
+	glBindTexture(GL_TEXTURE_2D, fontId);
+	glBegin(GL_TRIANGLES);
+	for (int i = 0; i < Verticies.size(); i++)
+	{
+		glTexCoord2f(UVs[i].x, UVs[i].y);
+		glVertex3f(Verticies[i].x, Verticies[i].y, Verticies[i].z);
+	}
+	glEnd();
 }

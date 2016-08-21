@@ -83,13 +83,16 @@ int main(int argc, char* argv[])
 
 	//Begin main loop
 	bool done = false;
+	int fontId;
+	Renderer::loadTexture("Textures/Crate.bmp", &fontId);
 	GameObject testObject;
-	createObjectFromNewFile("Models/HDMonkey.dae", &testObject);
+	createObjectFromNewFile("Models/cube.dae", &testObject);
 	Renderer::initGl(curDisplayMode.w,curDisplayMode.h);
 	SDL_GL_SwapWindow(mainWindow);
 	while (!done)
 	{
 		Renderer::drawGameObject(&testObject);
+		//Renderer::writeText("H", fontId, 0.50, 0.5, 1);
 		SDL_Event event;
 		while(SDL_PollEvent(&event))
 		{
@@ -125,5 +128,6 @@ int main(int argc, char* argv[])
 		}
 		SDL_GL_SwapWindow(mainWindow);
 	}
+
 	return 0;
 }

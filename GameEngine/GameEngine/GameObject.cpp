@@ -184,16 +184,32 @@ bool createObjectFromNewFile(const char* filename, GameObject* obj)
 		i += getIndexLen(&normalsChars[i]) + 1;
 	}
 
+	//Move to the UVs source 
+	sourceNode = sourceNode->next_sibling();
+	char* uvChars = sourceNode->first_node()->value();
+
+	glm::vec2 uv;
+	num = strlen(uvChars);
+	for (int i = 0; i < num;)
+	{
+		sscanf_s(&uvChars[i], "%f %f", &uv.x, &uv.y);
+		tempUvs.push_back(uv);
+		i += getIndexLen(&uvChars[i]) + 1;
+		i += getIndexLen(&uvChars[i]) + 1;
+	}
+
 	sourceNode = sourceNode->next_sibling("polylist");
 	sscanf_s(sourceNode->first_attribute("count")->value(), "%d", &num);
 	char* indicies = sourceNode->first_node("p")->value();
-	unsigned int vertexIndex, normalIndex;
+	unsigned int vertexIndex, normalIndex, uvIndex;
 	num = strlen(indicies);
 	for (int i = 0; i < num;)
 	{
-		sscanf_s(&indicies[i], "%d %d", &vertexIndex, &normalIndex);
+		sscanf_s(&indicies[i], "%d %d %d", &vertexIndex, &normalIndex,&uvIndex);
 		vertexIndices.push_back(vertexIndex);
 		normalIndices.push_back(normalIndex);
+		uvIndices.push_back(uvIndex);
+		i += getIndexLen(&indicies[i]) + 1;
 		i += getIndexLen(&indicies[i]) + 1;
 		i += getIndexLen(&indicies[i]) + 1;
 	}
@@ -209,6 +225,12 @@ bool createObjectFromNewFile(const char* filename, GameObject* obj)
 		unsigned int normalIndex = normalIndices[i];
 		glm::vec3 normal = tempNormals[normalIndex];
 		obj->normals.push_back(normal);
+	}
+	for (unsigned int i = 0; i < uvIndices.size(); i++)
+	{
+		unsigned int uvIndex = uvIndices[i];
+		glm::vec2 uv = tempUvs[uvIndex];
+		obj->uvs.push_back(uv);
 	}
 
 	return true;

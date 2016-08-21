@@ -1,12 +1,19 @@
+#include "MenuState.h"
 
-void Update()
+
+void MenuState::Update()
 {
 }
 
-void OnStateEnter()
+void MenuState::OnStateEnter()
 {
 }
 
-void OnStateExit()
+void MenuState::OnStateExit()
 {
+}
+
+void Menustate(char* MenuFile)
+{
+
 }
