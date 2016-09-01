@@ -6,7 +6,13 @@
 #include "Renderer.h"
 
 #include "SOIL.h"
+
 #include <vector>
+
+#include "rapidxml.hpp"
+#include "rapidxml_utils.hpp"
+
+
 
 //Default lighting float arrays, these values are for testing only
 //Amient and diffuse are RGBA values, position is XYZ and the way the light points
@@ -21,6 +27,10 @@ float zRot = 0;
 float xPos = 0;
 float yPos = 0;
 float zPos = 2;
+
+float screenWidth;
+float screenHeight;
+
 
 float angle = 3.14159;
 float angleY = 0;
@@ -37,6 +47,10 @@ void Renderer::initGl(int width, int height)
 {
 	//Size the open gl viewport to be the same size as the window
 	glViewport(0, 0, width, height);
+
+	screenWidth = width;
+	screenHeight = height;
+
 	//Change projection matrix based on window size
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -112,7 +126,7 @@ void Renderer::setPlayerRotation(float deltaAngle, float deltaAngleY)
 }
 
 
-bool Renderer::loadTexture(char* path, int* textureId)
+bool Renderer::loadTexture(const char* path, int* textureId)
 {
 	*textureId = SOIL_load_OGL_texture(path, SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_INVERT_Y);
 	if (*textureId == 0)
@@ -123,7 +137,55 @@ bool Renderer::loadTexture(char* path, int* textureId)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 }
 
-void Renderer::writeText(char* text, int fontId, float x, float y, float size)
+bool Renderer::LoadFont(char* filename, Font* font)
+{
+	rapidxml::file<> xml(filename);
+	rapidxml::xml_document<> doc;
+
+	doc.parse<0>(xml.data());
+	Font newFont;
+	rapidxml::xml_node<> *curNode = doc.first_node();
+	curNode = curNode->first_node("pages");
+	std::string path("Fonts/" + (std::string)curNode->first_node()->first_attribute("file")->value());
+	if (!Renderer::loadTexture(path.c_str(), &newFont.textureId))
+	{
+		return false;
+	}
+	float width, height;
+	glBindTexture(GL_TEXTURE_2D, newFont.textureId);
+	glGetTexLevelParameterfv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
+	glGetTexLevelParameterfv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
+	curNode = curNode->next_sibling("chars");
+	int charAmount;
+	sscanf_s(curNode->first_attribute()->value(), "%d",&charAmount);
+	curNode = curNode->first_node();
+	for (int i = 0; i < charAmount; i++)
+	{
+		Character newChar;
+		int id; 
+		sscanf_s(curNode->first_attribute("id")->value(), "%d",&id);
+		sscanf_s(curNode->first_attribute("x")->value(), "%f", &newChar.x);
+		newChar.x /= width;
+		sscanf_s(curNode->first_attribute("y")->value(), "%f", &newChar.y);
+		newChar.y /= height;
+		sscanf_s(curNode->first_attribute("width")->value(), "%f", &newChar.width);
+		newChar.width /= width;
+		sscanf_s(curNode->first_attribute("height")->value(), "%f", &newChar.height);
+		newChar.height /= height;
+		sscanf_s(curNode->first_attribute("xoffset")->value(), "%f", &newChar.xOffset);
+		newChar.xOffset /= width;
+		sscanf_s(curNode->first_attribute("yoffset")->value(), "%f", &newChar.yOffset);
+		newChar.yOffset /= height;
+		sscanf_s(curNode->first_attribute("xadvance")->value(), "%f", &newChar.xAdvance);
+		newChar.xAdvance /= width;
+
+		newFont.fontChars.insert(std::pair<int, Character>(id, newChar));
+		curNode = curNode->next_sibling();
+	}
+	*font = newFont;
+}
+
+void Renderer::writeText(char* text, Font* font,float letterWidth, float letterHeight,float x,float y)
 {
 	float lookObjy = sin(angleY) * distance + yPos;
 	float xzRate = abs(cos(angleY) * distance);
@@ -135,17 +197,16 @@ void Renderer::writeText(char* text, int fontId, float x, float y, float size)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
 	gluLookAt(xPos, yPos, zPos, lookObjx, lookObjy, lookObjz, 0, 1, 0);
-	glTranslatef(0.0, 0.0, -5);
-
-	std::vector<glm::vec3> Verticies;
+	glTranslatef(0, 0, -5);
+	std::vector<glm::vec2> Verticies;
 	std::vector<glm::vec2> UVs;
 	int len = strlen(text);
 	for (int i = 0; i < len; i++)
 	{
-		glm::vec3 topLeftVert = glm::vec3(x + i*size, y + size, 0);
-		glm::vec3 topRightVert = glm::vec3(x + i*size + size, y + size, 0);
-		glm::vec3 bottomRightVert = glm::vec3(x + i*size + size, y, 0);
-		glm::vec3 bottomLeftVert = glm::vec3(x + i*size, y, 0);
+		glm::vec2 topLeftVert = glm::vec2(x + i*letterWidth, y*letterHeight);
+		glm::vec2 topRightVert = glm::vec2(x + i*letterWidth + letterWidth, y*letterHeight);
+		glm::vec2 bottomRightVert = glm::vec2(x +i*letterWidth + letterWidth, y*letterHeight + letterHeight);
+		glm::vec2 bottomLeftVert = glm::vec2(x + i*letterWidth, y*letterHeight + letterHeight);
 
 		Verticies.push_back(topLeftVert);
 		Verticies.push_back(bottomLeftVert);
@@ -155,29 +216,32 @@ void Renderer::writeText(char* text, int fontId, float x, float y, float size)
 		Verticies.push_back(topRightVert);
 		Verticies.push_back(bottomLeftVert);
 
-		char character = text[i];
-		float uvX = (character % 16) / 16.0f;
-		float uvY = (character / 16) / 16.0f;
+		int character = text[i];
+		Character toDraw = font->fontChars.find(character)->second;
+		glm::vec2 topLeftUV = glm::vec2(toDraw.x, 1 - (toDraw.height + toDraw.y));
+		glm::vec2 topRightUV = glm::vec2(toDraw.x + toDraw.width, 1 - (toDraw.height + toDraw.y)); 
+		glm::vec2 bottomRightUV = glm::vec2(toDraw.x + toDraw.width, 1 - toDraw.y);
+		glm::vec2 bottomLeftUV = glm::vec2(toDraw.x, 1 - toDraw.y); 
 
-		glm::vec2 topLeftUV = glm::vec2(uvX, 1 - uvY);
-		glm::vec2 topRIghtUV = glm::vec2(uvX+1/16, 1 - uvY);
-		glm::vec2 bottomRightUV = glm::vec2(uvX+1/16, 1 - (uvY+1.0f/16.0f));
-		glm::vec2 bottomLeftUV = glm::vec2(uvX, 1 - (uvY + 1.0f / 16.0f));
 
 		UVs.push_back(topLeftUV);
 		UVs.push_back(bottomLeftUV);
-		UVs.push_back(topRIghtUV);
+		UVs.push_back(topRightUV);
 
 		UVs.push_back(bottomRightUV);
-		UVs.push_back(topRIghtUV);
+		UVs.push_back(topRightUV);
 		UVs.push_back(bottomLeftUV);
 	}
-	glBindTexture(GL_TEXTURE_2D, fontId);
+	glBindTexture(GL_TEXTURE_2D, font->textureId);
 	glBegin(GL_TRIANGLES);
 	for (int i = 0; i < Verticies.size(); i++)
 	{
-		glTexCoord2f(UVs[i].x, UVs[i].y);
-		glVertex3f(Verticies[i].x, Verticies[i].y, Verticies[i].z);
+		glNormal3f(0, 0, 1);
+		glTexCoord2d(UVs[i].x, UVs[i].y);
+		glVertex3f(Verticies[i].x, Verticies[i].y,-1);
 	}
 	glEnd();
 }
+
+
+

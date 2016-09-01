@@ -13,11 +13,7 @@
 #include "GameObject.h"
 
 
-
-
 using namespace std;
-
-
 
 
 
@@ -31,6 +27,7 @@ int main(int argc, char* argv[])
 	//Check if SDL Video game be initialized, if not end the program
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)
 	{
+		printf_s("Could not init SDL");
 		return 0;
 	}
 
@@ -66,7 +63,7 @@ int main(int argc, char* argv[])
 	
 
     //Create a platform independent open GL window
-	mainWindow = SDL_CreateWindow(windowName.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, curDisplayMode.w, curDisplayMode.h, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+	mainWindow = SDL_CreateWindow(windowName.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, curDisplayMode.w, curDisplayMode.h, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
 	
 	//If window could not be created end the program
 	if (!mainWindow)
@@ -82,17 +79,19 @@ int main(int argc, char* argv[])
 
 
 	//Begin main loop
+	Font font;
 	bool done = false;
 	int fontId;
-	Renderer::loadTexture("Textures/Crate.bmp", &fontId);
+	Renderer::loadTexture("Textures/crate.bmp", &fontId);
 	GameObject testObject;
-	createObjectFromNewFile("Models/cube.dae", &testObject);
+	CreateObjectFromDAEFile("Models/Cube.dae",&testObject);
 	Renderer::initGl(curDisplayMode.w,curDisplayMode.h);
+	Renderer::LoadFont("Fonts/BasicLatin.fnt", &font);
 	SDL_GL_SwapWindow(mainWindow);
 	while (!done)
 	{
-		Renderer::drawGameObject(&testObject);
-		//Renderer::writeText("H", fontId, 0.50, 0.5, 1);
+		//Renderer::drawGameObject(&testObject);
+		Renderer::writeText("Test", &font,0.5f,0.5f,0,0);
 		SDL_Event event;
 		while(SDL_PollEvent(&event))
 		{

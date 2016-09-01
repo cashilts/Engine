@@ -118,7 +118,7 @@ bool createObjectFromFile(const char* filename, GameObject* obj)
 	return true;
 }
 
-bool createObjectFromNewFile(const char* filename, GameObject* obj)
+bool CreateObjectFromDAEFile(const char* filename, GameObject* obj)
 {
 	std::vector<unsigned int> vertexIndices, uvIndices, normalIndices;
 	std::vector<glm::vec3> tempVerticies;

@@ -6,4 +6,5 @@ To Do:
 -Implement BOOST library for platform independant file navigation
 -Implement SOIL library for texture loading
 -Create class for game objects (In progress)
+-Look up double buffering techniques
 -Create support for glDrawArrays()
