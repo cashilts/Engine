@@ -11,7 +11,7 @@
 
 #include "Renderer.h"
 #include "GameObject.h"
-
+#include "GameManager.h"
 
 using namespace std;
 
@@ -76,22 +76,27 @@ int main(int argc, char* argv[])
 
 	SDL_GL_SetSwapInterval(1);
 	
-
+	Renderer::initGl(curDisplayMode.w, curDisplayMode.h);
 
 	//Begin main loop
+
+	GameManager game;
+	game.GameInit();
+
 	Font font;
 	bool done = false;
 	int fontId;
-	Renderer::loadTexture("Textures/crate.bmp", &fontId);
+	//Renderer::loadTexture("Textures/crate.bmp", &fontId);
 	GameObject testObject;
-	CreateObjectFromDAEFile("Models/Cube.dae",&testObject);
-	Renderer::initGl(curDisplayMode.w,curDisplayMode.h);
-	Renderer::LoadFont("Fonts/BasicLatin.fnt", &font);
+	//CreateObjectFromDAEFile("Models/Cube.dae",&testObject);
+	
+	//Renderer::LoadFont("Fonts/BasicLatin.fnt", &font);
 	SDL_GL_SwapWindow(mainWindow);
 	while (!done)
 	{
 		//Renderer::drawGameObject(&testObject);
-		Renderer::writeText("Test", &font,0.5f,0.5f,0,0);
+		//Renderer::writeText("Hi Alex! Love you!", &font,0.5f,0.5f,0,0);
+		game.GameLoop();
 		SDL_Event event;
 		while(SDL_PollEvent(&event))
 		{
@@ -114,7 +119,7 @@ int main(int argc, char* argv[])
 				float deltaAngle = (x - halfWidth)/halfWidth;
 
 				//Change the angle so the entire screen spans pi (180 degrees) 
-				deltaAngle *= -3.1419;
+				deltaAngle *= -3.1419f;
 
 				//Repeat for the Y, do not span pi entirely so the player cannot look straight up
 				float halfHeight = curDisplayMode.h / 2;

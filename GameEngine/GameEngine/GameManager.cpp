@@ -1,14 +1,21 @@
-#include <map>
-#include "GameState.h"
-class GameManager {
+#include "GameManager.h"
 
-	bool mouseClick = false;
-	bool mouseHold = false;
-	
-	std::map<std::string, GameState>StateManager;
+MenuState testState("Menus/TestMenu.txt");
 
-	void GameInit()
+void GameManager::GameInit()
+{
+
+	currentState = &testState;
+	prevState = &testState;
+}
+
+void GameManager::GameLoop()
+{
+	if (stateChange)
 	{
+		prevState->OnStateExit();
+		currentState->OnStateEnter();
+		stateChange = false;
 	}
-
-};
+	currentState->Update();
+}

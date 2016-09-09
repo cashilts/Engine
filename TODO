@@ -4,7 +4,12 @@ To Do:
 -Figure out good library for game audio
 -Create system where menus are loaded from file
 -Implement BOOST library for platform independant file navigation
--Implement SOIL library for texture loading
 -Create class for game objects (In progress)
 -Look up double buffering techniques
 -Create support for glDrawArrays()
+
+Menu Plan
+-First line, font set for menu
+-All other lines can have the following
+t <text> <int> <int> writes the text to the coordinates
+b <text> <text> button, text designates the action taken by the button 

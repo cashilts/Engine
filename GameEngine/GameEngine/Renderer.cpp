@@ -106,7 +106,7 @@ bool Renderer::drawGameObject(GameObject* obj)
 	}
 	//TODO: Replace this function with Gl drawarrays version
 	glBegin(GL_TRIANGLES);
-	for (int i = 0; i < obj->verticies.size(); i++)
+	for ( uint16_t i = 0; i < obj->verticies.size(); i++)
 	{
 		glNormal3f(obj->normals[i].x, obj->normals[i].y, obj->normals[i].z);
 		glTexCoord2f(obj->uvs[i].x, obj->uvs[i].y);
@@ -135,6 +135,7 @@ bool Renderer::loadTexture(const char* path, int* textureId)
 	glBindTexture(GL_TEXTURE_2D, *textureId);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	return true;
 }
 
 bool Renderer::LoadFont(char* filename, Font* font)
@@ -155,6 +156,8 @@ bool Renderer::LoadFont(char* filename, Font* font)
 	glBindTexture(GL_TEXTURE_2D, newFont.textureId);
 	glGetTexLevelParameterfv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
 	glGetTexLevelParameterfv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
+	newFont.width = width;
+	newFont.height = height;
 	curNode = curNode->next_sibling("chars");
 	int charAmount;
 	sscanf_s(curNode->first_attribute()->value(), "%d",&charAmount);
@@ -165,19 +168,19 @@ bool Renderer::LoadFont(char* filename, Font* font)
 		int id; 
 		sscanf_s(curNode->first_attribute("id")->value(), "%d",&id);
 		sscanf_s(curNode->first_attribute("x")->value(), "%f", &newChar.x);
-		newChar.x /= width;
+		//newChar.x /= width;
 		sscanf_s(curNode->first_attribute("y")->value(), "%f", &newChar.y);
-		newChar.y /= height;
+		//newChar.y /= height;
 		sscanf_s(curNode->first_attribute("width")->value(), "%f", &newChar.width);
-		newChar.width /= width;
+		//newChar.width /= width;
 		sscanf_s(curNode->first_attribute("height")->value(), "%f", &newChar.height);
-		newChar.height /= height;
+		//newChar.height /= height;
 		sscanf_s(curNode->first_attribute("xoffset")->value(), "%f", &newChar.xOffset);
-		newChar.xOffset /= width;
+		//newChar.xOffset /= width;
 		sscanf_s(curNode->first_attribute("yoffset")->value(), "%f", &newChar.yOffset);
-		newChar.yOffset /= height;
+		//newChar.yOffset /= height;
 		sscanf_s(curNode->first_attribute("xadvance")->value(), "%f", &newChar.xAdvance);
-		newChar.xAdvance /= width;
+		//newChar.xAdvance /= width;
 
 		newFont.fontChars.insert(std::pair<int, Character>(id, newChar));
 		curNode = curNode->next_sibling();
@@ -187,26 +190,24 @@ bool Renderer::LoadFont(char* filename, Font* font)
 
 void Renderer::writeText(char* text, Font* font,float letterWidth, float letterHeight,float x,float y)
 {
-	float lookObjy = sin(angleY) * distance + yPos;
-	float xzRate = abs(cos(angleY) * distance);
-	float lookObjx = sin(angle) * xzRate + xPos;
-	float lookObjz = cos(angle) * xzRate + zPos;
 
-
-
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glLoadIdentity();
-	gluLookAt(xPos, yPos, zPos, lookObjx, lookObjy, lookObjz, 0, 1, 0);
-	glTranslatef(0, 0, -5);
+	glScalef(1 / font->width, 1 / font->height, 1);
 	std::vector<glm::vec2> Verticies;
 	std::vector<glm::vec2> UVs;
 	int len = strlen(text);
 	for (int i = 0; i < len; i++)
 	{
-		glm::vec2 topLeftVert = glm::vec2(x + i*letterWidth, y*letterHeight);
-		glm::vec2 topRightVert = glm::vec2(x + i*letterWidth + letterWidth, y*letterHeight);
-		glm::vec2 bottomRightVert = glm::vec2(x +i*letterWidth + letterWidth, y*letterHeight + letterHeight);
-		glm::vec2 bottomLeftVert = glm::vec2(x + i*letterWidth, y*letterHeight + letterHeight);
+		Character toDraw = font->fontChars.find(text[i])->second;
+		x += toDraw.xOffset;
+		//y -= toDraw.yOffset;
+
+		glm::vec2 topLeftVert = glm::vec2(x, y + toDraw.height);
+		glm::vec2 topRightVert = glm::vec2(x + toDraw.width, y + toDraw.height);
+		glm::vec2 bottomRightVert = glm::vec2(x + toDraw.width, y);
+		glm::vec2 bottomLeftVert = glm::vec2(x, y );
+
+		x = x - toDraw.xOffset + toDraw.xAdvance;
+		//y += toDraw.yOffset;
 
 		Verticies.push_back(topLeftVert);
 		Verticies.push_back(bottomLeftVert);
@@ -216,12 +217,11 @@ void Renderer::writeText(char* text, Font* font,float letterWidth, float letterH
 		Verticies.push_back(topRightVert);
 		Verticies.push_back(bottomLeftVert);
 
-		int character = text[i];
-		Character toDraw = font->fontChars.find(character)->second;
-		glm::vec2 topLeftUV = glm::vec2(toDraw.x, 1 - (toDraw.height + toDraw.y));
-		glm::vec2 topRightUV = glm::vec2(toDraw.x + toDraw.width, 1 - (toDraw.height + toDraw.y)); 
-		glm::vec2 bottomRightUV = glm::vec2(toDraw.x + toDraw.width, 1 - toDraw.y);
-		glm::vec2 bottomLeftUV = glm::vec2(toDraw.x, 1 - toDraw.y); 
+		
+		glm::vec2 bottomLeftUV = glm::vec2((toDraw.x/font->width), 1 - (toDraw.height/font->height + toDraw.y/font->height));
+		glm::vec2 bottomRightUV = glm::vec2(toDraw.x / font->width + toDraw.width / font->width, 1 - (toDraw.height / font->height + toDraw.y / font->height));
+		glm::vec2 topRightUV = glm::vec2(toDraw.x / font->width + toDraw.width / font->width, 1 - toDraw.y / font->height);
+		glm::vec2 topLeftUV = glm::vec2(toDraw.x / font->width, 1 - toDraw.y / font->height);
 
 
 		UVs.push_back(topLeftUV);
@@ -234,13 +234,21 @@ void Renderer::writeText(char* text, Font* font,float letterWidth, float letterH
 	}
 	glBindTexture(GL_TEXTURE_2D, font->textureId);
 	glBegin(GL_TRIANGLES);
-	for (int i = 0; i < Verticies.size(); i++)
+	for (uint16_t i = 0; i < Verticies.size(); i++)
 	{
 		glNormal3f(0, 0, 1);
 		glTexCoord2d(UVs[i].x, UVs[i].y);
-		glVertex3f(Verticies[i].x, Verticies[i].y,-1);
+		glVertex2f(Verticies[i].x, Verticies[i].y);
 	}
 	glEnd();
+}
+
+void Renderer::SetMenuPerspective(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glLoadIdentity();
+	gluLookAt(0, 0, 0, 0, 0, -1, 0, 1, 0);
+	glTranslatef(0, 0, -5);
 }
 
 

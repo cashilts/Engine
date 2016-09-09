@@ -1,14 +1,10 @@
-class GameState {
-	void Update()
-	{
-	}
+#include "GameState.h"
 
-	void OnStateEnter()
-	{
-	}
+void GameState::OnStateEnter()
+{}
 
-	void OnStateExit()
-	{
-	}
-	
-};
+void GameState::OnStateExit()
+{}
+
+void GameState::Update()
+{}

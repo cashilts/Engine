@@ -1,12 +1,20 @@
 #pragma once
-
+#include <map>
+#include "GameState.h"
+#include "StateCollection.h"
 
 class GameManager
 {
 public:
-	static void GameInit();
-
+	void GameInit();
+	void GameLoop();
+	GameState* currentState;
+	GameState* prevState;
 private:
-	GameManager() {}
+	bool mouseClick = false;
+	bool mouseHold = false;
+	bool stateChange = true;
+
+	std::map<std::string, GameState>StateManager;
 	
 };

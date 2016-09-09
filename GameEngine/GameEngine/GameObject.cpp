@@ -8,7 +8,7 @@
 
 
 
-
+//determines how many characters in a string of numbers seperated by spaces to shift so the same number is not read again when the string is re-scanned
 int getIndexLen(const char* numStart)
 {
 	int i = 1;
@@ -22,7 +22,8 @@ int getIndexLen(const char* numStart)
 	}
 }
 
-bool createObjectFromFile(const char* filename, GameObject* obj)
+//Obj files do not allow skeleton data to be transfered, avoid this file type
+bool createObjectFromOBJFile(const char* filename, GameObject* obj)
 {
 	//Create temporary vectors for the object data and indices
 	std::vector<unsigned int> vertexIndices, uvIndices, normalIndices;
@@ -165,26 +166,24 @@ bool CreateObjectFromDAEFile(const char* filename, GameObject* obj)
 	//Move to the normals source
 	sourceNode = sourceNode->next_sibling();
 
-	//Load the characters representing the normals
+	//Load the characters representing the normals, then repeat loading process similar to vertex loading
 	char* normalsChars = sourceNode->first_node()->value();
 
-	//Temp Normal
 	glm::vec3 norm;
 
-	//Set num to the normal length
 	num = strlen(normalsChars);
 
 	for (int i = 0; i < num;)
 	{
-		//Get the next 3 coordinates
 		sscanf_s(&normalsChars[i], "%f %f %f", &norm.x, &norm.y, &norm.z);
 		tempNormals.push_back(norm);
+
 		i += getIndexLen(&normalsChars[i]) + 1;
 		i += getIndexLen(&normalsChars[i]) + 1;
 		i += getIndexLen(&normalsChars[i]) + 1;
 	}
 
-	//Move to the UVs source 
+	//Move to UV source, repeat the same process used to load normals and vertexs
 	sourceNode = sourceNode->next_sibling();
 	char* uvChars = sourceNode->first_node()->value();
 
@@ -198,6 +197,8 @@ bool CreateObjectFromDAEFile(const char* filename, GameObject* obj)
 		i += getIndexLen(&uvChars[i]) + 1;
 	}
 
+
+	//Move to node containing face data, load indicies similar to how vertex data was loaded
 	sourceNode = sourceNode->next_sibling("polylist");
 	sscanf_s(sourceNode->first_attribute("count")->value(), "%d", &num);
 	char* indicies = sourceNode->first_node("p")->value();
@@ -209,11 +210,13 @@ bool CreateObjectFromDAEFile(const char* filename, GameObject* obj)
 		vertexIndices.push_back(vertexIndex);
 		normalIndices.push_back(normalIndex);
 		uvIndices.push_back(uvIndex);
+
 		i += getIndexLen(&indicies[i]) + 1;
 		i += getIndexLen(&indicies[i]) + 1;
 		i += getIndexLen(&indicies[i]) + 1;
 	}
 
+	//Order verticies, normals and UVs so that all coordinate with the same vertex based on their index
 	for (unsigned int i = 0; i < vertexIndices.size(); i++)
 	{
 		unsigned int vertexIndex = vertexIndices[i];

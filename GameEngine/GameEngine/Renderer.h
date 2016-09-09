@@ -14,7 +14,8 @@ struct Character {
 };
 struct Font {
 	std::map<int, Character> fontChars;
-	int textureId;
+	int textureId = 0;
+	float width, height;
 };
 
 class Renderer
@@ -28,6 +29,7 @@ public:
 	static void writeText(char* text, Font* font, float letterWidth, float letterHeight, float x, float y);
 	static bool loadTexture(const char* path, int* textureId);
 	static bool LoadFont(char* filename,Font* font);
+	static void SetMenuPerspective(void);
 private:
 	static float LightAmbient[];
 	static float LightDiffuse[];
