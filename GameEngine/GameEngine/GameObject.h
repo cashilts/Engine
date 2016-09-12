@@ -13,5 +13,5 @@ protected:
 	float zPos;
 };
 
-bool createObjectFromFile(const char* filename, GameObject* obj);
+bool createObjectFromOBJFile(const char* filename, GameObject* obj);
 bool CreateObjectFromDAEFile(const char* filename, GameObject* obj);

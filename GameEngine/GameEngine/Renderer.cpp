@@ -1,17 +1,4 @@
-//Open GL libraries
-#include <GL/glew.h>
-#include <GL/glut.h>
-#include <GL/GL.h>
-
 #include "Renderer.h"
-
-#include "SOIL.h"
-
-#include <vector>
-
-#include "rapidxml.hpp"
-#include "rapidxml_utils.hpp"
-
 
 
 //Default lighting float arrays, these values are for testing only
@@ -55,6 +42,7 @@ void Renderer::initGl(int width, int height)
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluPerspective(45.0f, (GLfloat)640 / (GLfloat)480, 0.1f, 100.0f);
+	
 	//Load the model view matrix
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -114,8 +102,8 @@ bool Renderer::drawGameObject(GameObject* obj)
 	}
 	glEnd();
 	xRot += 0.1;
-	yRot += 0.2;
-	zRot += 0.3;
+	//yRot += 0.2;
+	//zRot += 0.3;
 	return true;
 }
 
@@ -138,7 +126,7 @@ bool Renderer::loadTexture(const char* path, int* textureId)
 	return true;
 }
 
-bool Renderer::LoadFont(char* filename, Font* font)
+bool Renderer::LoadFont(const char* filename, Font* font)
 {
 	rapidxml::file<> xml(filename);
 	rapidxml::xml_document<> doc;
@@ -188,10 +176,8 @@ bool Renderer::LoadFont(char* filename, Font* font)
 	*font = newFont;
 }
 
-void Renderer::writeText(char* text, Font* font,float letterWidth, float letterHeight,float x,float y)
+void Renderer::writeText(const char* text, Font* font,float letterWidth, float letterHeight,float x,float y)
 {
-
-	glScalef(1 / font->width, 1 / font->height, 1);
 	std::vector<glm::vec2> Verticies;
 	std::vector<glm::vec2> UVs;
 	int len = strlen(text);
@@ -241,14 +227,37 @@ void Renderer::writeText(char* text, Font* font,float letterWidth, float letterH
 		glVertex2f(Verticies[i].x, Verticies[i].y);
 	}
 	glEnd();
+	
 }
 
-void Renderer::SetMenuPerspective(void)
+void Renderer::SetMenuPerspective()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
 	gluLookAt(0, 0, 0, 0, 0, -1, 0, 1, 0);
 	glTranslatef(0, 0, -5);
+}
+
+void Renderer::MouseCoodinatesToScreen(float* mouseX, float* mouseY)
+{
+
+	GLdouble x, y, z,farX,farY,farZ;
+	GLint viewport[4];
+	GLdouble modelView[16];
+	GLdouble Projection[16];
+	GLfloat mouseZ;
+	
+	glGetDoublev(GL_MODELVIEW_MATRIX, modelView);
+	glGetDoublev(GL_PROJECTION_MATRIX, Projection);
+	glGetIntegerv(GL_VIEWPORT, viewport);
+	
+
+	*mouseY = (float)viewport[3] - *mouseY;
+	glReadPixels(*mouseX,(int)mouseY, 1,1, GL_DEPTH_COMPONENT, GL_FLOAT, &mouseZ);
+	gluUnProject(*mouseX, *mouseY,mouseZ, modelView, Projection, viewport, &x, &y, &z);
+
+	*mouseX = (float)x;
+	*mouseY = (float)y;
 }
 
 

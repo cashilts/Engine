@@ -2,14 +2,15 @@
 
 MenuState testState("Menus/TestMenu.txt");
 
+
 void GameManager::GameInit()
 {
-
+	testState.StateCallback = &GameManager::ChangeState;
 	currentState = &testState;
 	prevState = &testState;
 }
 
-void GameManager::GameLoop()
+void GameManager::GameLoop(float mouseX, float mouseY)
 {
 	if (stateChange)
 	{
@@ -17,5 +18,10 @@ void GameManager::GameLoop()
 		currentState->OnStateEnter();
 		stateChange = false;
 	}
-	currentState->Update();
+	currentState->Update(mouseX, mouseY);
+}
+
+void GameManager::ChangeState(std::string stateName)
+{
+
 }

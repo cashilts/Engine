@@ -6,5 +6,5 @@ void GameState::OnStateEnter()
 void GameState::OnStateExit()
 {}
 
-void GameState::Update()
+void GameState::Update(float mouseX, float mouseY)
 {}

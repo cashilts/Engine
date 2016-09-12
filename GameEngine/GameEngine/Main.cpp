@@ -83,6 +83,8 @@ int main(int argc, char* argv[])
 	GameManager game;
 	game.GameInit();
 
+	int mouseX = 0, mouseY = 0;
+
 	Font font;
 	bool done = false;
 	int fontId;
@@ -96,7 +98,7 @@ int main(int argc, char* argv[])
 	{
 		//Renderer::drawGameObject(&testObject);
 		//Renderer::writeText("Hi Alex! Love you!", &font,0.5f,0.5f,0,0);
-		game.GameLoop();
+		
 		SDL_Event event;
 		while(SDL_PollEvent(&event))
 		{
@@ -106,12 +108,10 @@ int main(int argc, char* argv[])
 			}
 			else if (event.type == SDL_MOUSEMOTION)
 			{
-				//When the mouse moves update the camera
-				int x = 0;
-				int y = 0;
 				//Get mouse coords
-				SDL_GetMouseState(&x, &y);
+				SDL_GetMouseState(&mouseX, &mouseY);
 
+				/*
 				//Use the halfwidth of the screen, dividing the screen into a negative side and a positive
 				float halfWidth = curDisplayMode.w / 2;
 
@@ -128,8 +128,10 @@ int main(int argc, char* argv[])
 
 				//Send to the renderer
 				Renderer::setPlayerRotation(deltaAngle, deltaAngleH);
+				*/
 			}
 		}
+		game.GameLoop(mouseX, mouseY);
 		SDL_GL_SwapWindow(mainWindow);
 	}
 

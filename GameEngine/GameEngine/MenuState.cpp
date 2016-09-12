@@ -1,15 +1,32 @@
 #include "MenuState.h"
 
-void MenuState::Update()
+void MenuState::Update(float mouseX, float mouseY)
 {
-	Renderer::SetMenuPerspective();
-	Renderer::writeText("Testing Menu State",&font,0.5f,0.5f,0,0);
+	Renderer::MouseCoodinatesToScreen(&mouseX, &mouseY);
+	std::string coords = "Coords: " + std::to_string(mouseX) + " " + std::to_string(mouseY);
+	
+	//Renderer::SetMenuPerspective();
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	Renderer::writeText(coords.c_str(), &font, 1, 1, mouseX, mouseY);
+	int length = menuObjects.size();
+	for (int i =0; i<length; i++)
+	{
+		menuObjects[i]->fontForMenu = &font;
+		menuObjects[i]->updateObj();
+	}
 }
 
 void MenuState::OnStateEnter()
 {
 	//Font should be loaded after state is entering, not when program is started, since texture loading cannot begin until opengl is initialized
-	Renderer::LoadFont(fontName, &font);
+	glDisable(GL_LIGHTING);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	Renderer::LoadFont(fontName.c_str(), &font);
+	glOrtho(0, menuWidth, 0, menuHeight, 0.1f, 100.0f);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(0, 0, -1);
 }
 
 void MenuState::OnStateExit()
@@ -25,10 +42,9 @@ MenuState::MenuState(char* MenuFile)
 	if (menu == NULL)
 		return;
 
-	char buffer[30];
+	std::string buffer;
 	//All font files begin with font path followed by menu dimensions then by however menu objects are in the file
-	fscanf_s(menu, "%s", &buffer);
-	strcpy_s(fontName, buffer);
+	fscanf_s(menu, "%s", &fontName);
 
 	fscanf_s(menu, "%f", &menuWidth);
 	fscanf_s(menu, "%f", &menuHeight);
@@ -40,18 +56,31 @@ MenuState::MenuState(char* MenuFile)
 	{
 		//For each object in menu, check the object type prefix
 		fscanf_s(menu, "%s", &buffer);
-		if (strcmp(buffer, "t") == 0)
+		if (strcmp(buffer.c_str(), "t")==0)
 		{
 			MenuText newTextObj;
+			
 			fscanf_s(menu, "%s", &buffer);
-			newTextObj.text = buffer;
+			newTextObj.text = buffer.c_str();
 			fscanf_s(menu, "%f", &newTextObj.xPos);
 			fscanf_s(menu, "%f", &newTextObj.yPos);
 
+			MenuText* textPoint = new MenuText;
+			textPoint->text = newTextObj.text.c_str();
+			textPoint->xPos = newTextObj.xPos;
+			textPoint->yPos = newTextObj.yPos;
 			//Add each menu object into the vector 
-			menuObjects.push_back(newTextObj);
+			
+			menuObjects.push_back(textPoint);
 		}
 
 	}
 
+}
+
+MenuState::~MenuState() {
+	for each (MenuObject* obj in menuObjects)
+	{
+		free(obj);
+	}
 }
