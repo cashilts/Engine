@@ -30,6 +30,7 @@ bool Renderer::drawGlScene()
 	return true;
 }
 
+
 void Renderer::initGl(int width, int height)
 {
 	//Size the open gl viewport to be the same size as the window
@@ -260,5 +261,55 @@ void Renderer::MouseCoodinatesToScreen(float* mouseX, float* mouseY)
 	*mouseY = (float)y;
 }
 
+
+unsigned long getFileLength(std::ifstream& file)
+{
+	if (!file.good()) return 0;
+
+	unsigned long pos = file.tellg();
+	file.seekg(0, std::ios::end);
+	unsigned long len = file.tellg();
+	file.seekg(std::ios::beg);
+	
+	return len;
+}
+
+
+//Load shader takes a text file with open gl shader source code and loads it into memory.
+int loadShader(char * filename, GLchar** ShaderSource, unsigned long* len)
+{
+	std::ifstream file;
+	file.open(filename, std::ios::in); //Opens file as ASCII
+	if (!file) return -1;
+
+	*len = getFileLength(file);
+
+	if (*len == 0) return -2; 
+
+	*ShaderSource = new char[*len + 1];
+	if (*ShaderSource == 0) return -3;
+
+	*ShaderSource[*len] = 0;
+
+	unsigned int i = 0;
+	while (file.good())
+	{
+		*ShaderSource[i] = file.get();
+		if (!file.eof()) i++;
+	}
+
+	*ShaderSource[i] = 0;
+	file.close();
+	return 0;
+}
+
+int unloadShader(GLchar** ShaderSource)
+{
+	if (*ShaderSource != 0)
+	{
+		delete[] *ShaderSource;
+	}
+	*ShaderSource = 0;
+}
 
 

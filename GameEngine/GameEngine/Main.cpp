@@ -87,6 +87,7 @@ int main(int argc, char* argv[])
 
 	Font font;
 	bool done = false;
+	bool mouseClick = false;
 	int fontId;
 	//Renderer::loadTexture("Textures/crate.bmp", &fontId);
 	GameObject testObject;
@@ -100,6 +101,10 @@ int main(int argc, char* argv[])
 		//Renderer::writeText("Hi Alex! Love you!", &font,0.5f,0.5f,0,0);
 		
 		SDL_Event event;
+		if (mouseClick)
+		{
+			mouseClick = false;
+		}
 		while(SDL_PollEvent(&event))
 		{
 			if (event.type == SDL_KEYDOWN)
@@ -110,7 +115,6 @@ int main(int argc, char* argv[])
 			{
 				//Get mouse coords
 				SDL_GetMouseState(&mouseX, &mouseY);
-
 				/*
 				//Use the halfwidth of the screen, dividing the screen into a negative side and a positive
 				float halfWidth = curDisplayMode.w / 2;
@@ -130,8 +134,12 @@ int main(int argc, char* argv[])
 				Renderer::setPlayerRotation(deltaAngle, deltaAngleH);
 				*/
 			}
+			else if (event.type == SDL_MOUSEBUTTONDOWN)
+			{
+				mouseClick = true;
+			}
 		}
-		game.GameLoop(mouseX, mouseY);
+		game.GameLoop(mouseX, mouseY,mouseClick);
 		SDL_GL_SwapWindow(mainWindow);
 	}
 

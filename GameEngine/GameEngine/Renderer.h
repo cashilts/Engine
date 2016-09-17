@@ -12,7 +12,9 @@
 //STL collections
 #include <vector>
 #include <map>
+#include <fstream>
 
+//Xml libraries	
 #include "rapidxml.hpp"
 #include "rapidxml_utils.hpp"
 

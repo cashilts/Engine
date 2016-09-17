@@ -1,4 +1,5 @@
 #pragma once
+#include "Renderer.h"
 #include <string>
 
 //Game state is a template class that is used to control different states of the overall game
@@ -6,10 +7,11 @@
 class GameState {
 	friend class GameManager;
 	public:
-		virtual void Update(float mouseX, float mouseY); //Update is where objects are updated with information based on the current frame and rendered
+		virtual void Update(float mouseX, float mouseY,bool mouseClick); //Update is where objects are updated with information based on the current frame and rendered
 		virtual void OnStateEnter(); //Called when the state is entered in the game manager, used for loading and initialization
 		virtual void OnStateExit(); //Called when the state is left and used for destruction
-		void(GameManager::*StateCallback)(std::string); //Used so the game state can callback to the state system
+		GameManager* callback; //Used so the game state can callback to the state system
+		void(GameManager::*fnPoint)(std::string);
 	private:
 		
 };
