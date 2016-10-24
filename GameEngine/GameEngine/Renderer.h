@@ -13,6 +13,7 @@
 #include <vector>
 #include <map>
 #include <fstream>
+#include <iostream>
 
 //Xml libraries	
 #include "rapidxml.hpp"

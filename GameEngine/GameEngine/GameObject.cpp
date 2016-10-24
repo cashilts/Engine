@@ -4,6 +4,8 @@
 #include "rapidxml_utils.hpp"
 
 #include <iostream>
+#include <string>
+#include <sstream>
 #include <fstream>
 
 
@@ -45,7 +47,7 @@ bool createObjectFromOBJFile(const char* filename, GameObject* obj)
 	}
 
 	//Continue until EOF
-	while (1)
+	while (1)			
 	{
 		//Read the next string of characters
 		char lineHeader[128];
@@ -98,25 +100,25 @@ bool createObjectFromOBJFile(const char* filename, GameObject* obj)
 		}
 	}
 	//Reindex verticies, normals and uvs to lines up so all line up correctly
-	for (unsigned int i = 0; i < vertexIndices.size(); i++)
-	{
-		unsigned int vertexIndex = vertexIndices[i];
-		glm::vec3 vertex = temp_verticies[vertexIndex - 1];
-		obj->verticies.push_back(vertex);
-	}
-	for (unsigned int i = 0; i < normalIndices.size(); i++)
-	{
-		unsigned int normalIndex = normalIndices[i];
-		glm::vec3 normal = temp_normals[normalIndex - 1];
-		obj->normals.push_back(normal);
-	}
-	for (unsigned int i = 0; i < uvIndices.size(); i++)
-	{
-		unsigned int uvIndex = uvIndices[i];
-		glm::vec2 uv = temp_uvs[uvIndex - 1];
-		obj->uvs.push_back(uv);
-	}
-	return true;
+	//for (unsigned int i = 0; i < vertexIndices.size(); i++)
+	//{
+	//	unsigned int vertexIndex = vertexIndices[i];
+	//	glm::vec3 vertex = temp_verticies[vertexIndex - 1];
+	//	obj->verticies.push_back(vertex);
+	//}
+	//for (unsigned int i = 0; i < normalIndices.size(); i++)
+	//{
+	//	unsigned int normalIndex = normalIndices[i];
+	//	glm::vec3 normal = temp_normals[normalIndex - 1];
+	//	obj->normals.push_back(normal);
+	//}
+	//for (unsigned int i = 0; i < uvIndices.size(); i++)
+	//{
+	//	unsigned int uvIndex = uvIndices[i];
+	//	glm::vec2 uv = temp_uvs[uvIndex - 1];
+	//	obj->uvs.push_back(uv);
+	//}
+	//return true;
 }
 
 bool CreateObjectFromDAEFile(const char* filename, GameObject* obj)
@@ -206,7 +208,7 @@ bool CreateObjectFromDAEFile(const char* filename, GameObject* obj)
 	num = strlen(indicies);
 	for (int i = 0; i < num;)
 	{
-		sscanf_s(&indicies[i], "%d %d %d", &vertexIndex, &normalIndex,&uvIndex);
+		sscanf_s(&indicies[i], "%d %d %d", &vertexIndex, &normalIndex, &uvIndex);
 		vertexIndices.push_back(vertexIndex);
 		normalIndices.push_back(normalIndex);
 		uvIndices.push_back(uvIndex);
@@ -219,22 +221,103 @@ bool CreateObjectFromDAEFile(const char* filename, GameObject* obj)
 	//Order verticies, normals and UVs so that all coordinate with the same vertex based on their index
 	for (unsigned int i = 0; i < vertexIndices.size(); i++)
 	{
+		vertex tempVertex;
 		unsigned int vertexIndex = vertexIndices[i];
-		glm::vec3 vertex = tempVerticies[vertexIndex];
-		obj->verticies.push_back(vertex);
-	}
-	for (unsigned int i = 0; i < normalIndices.size(); i++)
-	{
+		tempVertex.position = tempVerticies[vertexIndex];
 		unsigned int normalIndex = normalIndices[i];
-		glm::vec3 normal = tempNormals[normalIndex];
-		obj->normals.push_back(normal);
-	}
-	for (unsigned int i = 0; i < uvIndices.size(); i++)
-	{
+		tempVertex.normals = tempNormals[normalIndex];
 		unsigned int uvIndex = uvIndices[i];
-		glm::vec2 uv = tempUvs[uvIndex];
-		obj->uvs.push_back(uv);
+		tempVertex.uvs = tempUvs[uvIndex];
+		obj->verticies.push_back(tempVertex);
 	}
+	sourceNode = doc.first_node();
+	sourceNode = sourceNode->first_node("library_controllers");
+	sourceNode = sourceNode->first_node();
+	sourceNode = sourceNode->first_node();
+	sourceNode = sourceNode->first_node();
+	sourceNode = sourceNode->next_sibling();
+
+	std::vector<std::pair<std::string, int>> boneNameIndexPair;
+	std::string temp(sourceNode->first_node()->first_attribute("count")->value());
+	std::istringstream ss(temp);
+
+	int nameCount;
+	ss >> nameCount;
+
+	temp = std::string(sourceNode->first_node()->value());
+	ss = std::istringstream(temp);
+	for (int i = 0; i < nameCount; i++) {
+		std::string name;
+		ss >> name;
+		boneNameIndexPair.push_back(std::make_pair(name, i));
+	}
+
+	sourceNode = sourceNode->next_sibling();
+	sourceNode = sourceNode->next_sibling();
+
+	temp = std::string(sourceNode->first_node()->first_attribute("count")->value());
+	ss = std::istringstream(temp);
+	int bonePosCount;
+	ss >> bonePosCount;
+	temp = std::string(sourceNode->first_node()->value());
+	ss = std::istringstream(temp);
+	std::vector<float> tempBoneWeights;
+
+	for (int i = 0; i < bonePosCount; i++) {
+		float tempWeight;
+		ss >> tempWeight;
+		tempBoneWeights.push_back(tempWeight);
+	}
+	sourceNode = sourceNode->next_sibling("vertex_weights");
+	temp = std::string(sourceNode->first_attribute("count")->value());
+	ss = std::istringstream(temp);
+	int vertexCount;
+	ss >> vertexCount;
+	temp = std::string(sourceNode->first_node("vcount")->value());
+	std::istringstream vCount(temp);
+	temp = std::string(sourceNode->first_node("v")->value());
+	std::istringstream values(temp);
+	std::vector < std::pair<float*, int*>> tempBonePairs;
+	std::vector<float*>allweights;
+	std::vector<int*>allindicies;
+	std::vector<int>counts;
+	for (int i = 0; i < vertexCount; i++) {
+		int weightCount;
+		float weights[10];
+		int boneIndicies[10];
+		vCount >> weightCount;
+		for (int i = 0; i < weightCount; i++) {
+			int weightIndex;
+			values >> boneIndicies[i];
+			values >> weightIndex;
+			weights[i] = tempBoneWeights[weightIndex];
+		}
+		allweights.push_back(weights);
+		allindicies.push_back(boneIndicies);
+		counts.push_back(weightCount);
+	}
+
+	for (unsigned int i = 0; i < vertexIndices.size(); i++)
+	{
+		vertex tempVertex;
+		
+		unsigned int vertexIndex = vertexIndices[i];
+		tempVertex.position = tempVerticies[vertexIndex];
+		tempVertex.boneCount = counts[vertexIndex];
+		tempVertex.boneIndices = allindicies[vertexIndex];
+		tempVertex.boneWeights = allweights[vertexIndex];
+		unsigned int normalIndex = normalIndices[i];
+		tempVertex.normals = tempNormals[normalIndex];
+		unsigned int uvIndex = uvIndices[i];
+		tempVertex.uvs = tempUvs[uvIndex];
+		obj->verticies.push_back(tempVertex);
+	}
+
+
+	sourceNode = doc.first_node();
+	sourceNode = sourceNode->first_node("library_visual_scenes");
+	sourceNode = sourceNode->first_node();
+
 
 	return true;
 }

@@ -81,7 +81,7 @@ bool Renderer::drawGameObject(GameObject* obj)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
 	gluLookAt(xPos, yPos, zPos, lookObjx, lookObjy, lookObjz, 0, 1, 0);
-	glTranslatef(0.0, 0.0, -5);
+	glTranslatef(0.0, 0.0, -20);
 	glRotatef(xRot, 1.0, 0, 0);
 	glRotatef(yRot, 0, 1.0, 0);
 	glRotatef(zRot, 0, 0, 1);
@@ -97,14 +97,14 @@ bool Renderer::drawGameObject(GameObject* obj)
 	glBegin(GL_TRIANGLES);
 	for ( uint16_t i = 0; i < obj->verticies.size(); i++)
 	{
-		glNormal3f(obj->normals[i].x, obj->normals[i].y, obj->normals[i].z);
-		glTexCoord2f(obj->uvs[i].x, obj->uvs[i].y);
-		glVertex3f(obj->verticies[i].x, obj->verticies[i].y, obj->verticies[i].z);
+		glNormal3f(obj->verticies[i].normals.x, obj->verticies[i].normals.y, obj->verticies[i].normals.z);
+		glTexCoord2f(obj->verticies[i].uvs.x, obj->verticies[i].uvs.y);
+		glVertex3f(obj->verticies[i].position.x, obj->verticies[i].position.y, obj->verticies[i].position.z);
 	}
 	glEnd();
 	xRot += 0.1;
-	//yRot += 0.2;
-	//zRot += 0.3;
+	yRot += 0.2;
+	zRot += 0.3;
 	return true;
 }
 
@@ -310,6 +310,7 @@ int unloadShader(GLchar** ShaderSource)
 		delete[] *ShaderSource;
 	}
 	*ShaderSource = 0;
+	return 0;
 }
 
 

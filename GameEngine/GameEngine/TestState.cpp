@@ -4,8 +4,8 @@ int fontId;
 GameObject* testObject;
 
 void BasicTestingState::Update(float mouseX, float mouseY, bool mouseClick){
-	glTranslatef(0, 0, -5);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
+	glScalef(0.1f, 0.1f, 0.1f);
 	Renderer::drawGameObject(testObject);
 }
 
@@ -21,7 +21,7 @@ void BasicTestingState::OnStateEnter() {
 
 	glEnable(GL_LIGHTING);
 	Renderer::loadTexture("Textures/crate.bmp", &fontId);
-	CreateObjectFromDAEFile("Models/Cube.dae",testObject);
+	CreateObjectFromDAEFile("Models/human.dae",testObject);
 	
 
 }
