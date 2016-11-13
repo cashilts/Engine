@@ -30,12 +30,30 @@ bool Renderer::drawGlScene()
 	return true;
 }
 
+std::string readFile(const char *filePath) {
+	std::string content;
+	std::ifstream fileStream(filePath, std::ios::in);
+
+	if (!fileStream.is_open()) {
+		std::cerr << "Could not read file " << filePath << ". File does not exist." << std::endl;
+		return "";
+	}
+
+	std::string line = "";
+	while (!fileStream.eof()) {
+		std::getline(fileStream, line);
+		content.append(line + "\n");
+	}
+
+	fileStream.close();
+	return content;
+}
 
 void Renderer::initGl(int width, int height)
 {
 	//Size the open gl viewport to be the same size as the window
 	glViewport(0, 0, width, height);
-
+	glewInit();
 	screenWidth = width;
 	screenHeight = height;
 
@@ -85,23 +103,69 @@ bool Renderer::drawGameObject(GameObject* obj)
 	glRotatef(xRot, 1.0, 0, 0);
 	glRotatef(yRot, 0, 1.0, 0);
 	glRotatef(zRot, 0, 0, 1);
-	/*float modelMatrix[16];
+
+	//Shader program set up code
+	GLuint pointVBO;
+	glGenBuffers(1, &pointVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, pointVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(obj->positions)*obj->positions.size(), &obj->positions[0], GL_STATIC_DRAW);
+
+	GLuint normVBO;
+	glGenBuffers(1, &normVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, normVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(obj->normals)*obj->normals.size(), &obj->normals[0], GL_STATIC_DRAW);
+
+	GLuint uvVBO;
+	glGenBuffers(1, &uvVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, uvVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(obj->uvs)*obj->uvs.size(), &obj->uvs[0], GL_STATIC_DRAW);
+
+	GLuint vao = 0;
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+	glBindBuffer(GL_ARRAY_BUFFER, pointVBO);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, normVBO);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, uvVBO);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	
+
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+	glEnableVertexAttribArray(2);
+
+	GLuint shader = glCreateShader(GL_VERTEX_SHADER);
+	std::string vertShaderStr = readFile("Shader.GLSL");
+	const char* vertShaderSrc = vertShaderStr.c_str();
+	glShaderSource(shader, 1, &vertShaderSrc, NULL);
+	glCompileShader(shader);
+	GLuint program = glCreateProgram();
+	glAttachShader(program, shader);
+	float modelMatrix[16];
 	glGetFloatv(GL_MODELVIEW_MATRIX, modelMatrix);
 	float projectionMatrix[16];
-	glGetFloatv(GL_PROJECTION_MATRIX, projectionMatrix);*/
+	glGetFloatv(GL_PROJECTION_MATRIX, projectionMatrix);
+	glUniformMatrix4fv(glGetUniformLocation(program, "ModelView"), 1, false, modelMatrix);
+	glUniformMatrix4fv(glGetUniformLocation(program, "Projection"), 1, false, projectionMatrix);
+	glUniformMatrix4fv(glGetUniformLocation(program, "Bone"), 30, false, obj->bones);
+
+	glBindAttribLocation(program, 0, "vertex");
+	glBindAttribLocation(program, 1, "normal");
+	glBindAttribLocation(program, 2, "TexCoord");
+	glLinkProgram(program);
+	glUseProgram(program);
 	if (!obj)
 	{
 		return false;
 	}
 	//TODO: Replace this function with Gl drawarrays version
-	glBegin(GL_TRIANGLES);
-	for ( uint16_t i = 0; i < obj->verticies.size(); i++)
-	{
-		glNormal3f(obj->verticies[i].normals.x, obj->verticies[i].normals.y, obj->verticies[i].normals.z);
-		glTexCoord2f(obj->verticies[i].uvs.x, obj->verticies[i].uvs.y);
-		glVertex3f(obj->verticies[i].position.x, obj->verticies[i].position.y, obj->verticies[i].position.z);
-	}
-	glEnd();
+	
+	glBindVertexArray(vao);
+	
+
+	glDrawArrays(GL_TRIANGLES, 0,obj->positions.size());
+
 	xRot += 0.1;
 	yRot += 0.2;
 	zRot += 0.3;
@@ -239,6 +303,9 @@ void Renderer::SetMenuPerspective()
 	glTranslatef(0, 0, -5);
 }
 
+
+
+
 void Renderer::MouseCoodinatesToScreen(float* mouseX, float* mouseY)
 {
 
@@ -273,6 +340,8 @@ unsigned long getFileLength(std::ifstream& file)
 	
 	return len;
 }
+
+
 
 
 //Load shader takes a text file with open gl shader source code and loads it into memory.

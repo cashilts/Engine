@@ -7,6 +7,7 @@
 #include <string>
 #include <sstream>
 #include <fstream>
+#include <map>
 
 
 
@@ -121,6 +122,36 @@ bool createObjectFromOBJFile(const char* filename, GameObject* obj)
 	//return true;
 }
 
+void recursivelyGet(rapidxml::xml_node<>* node, float* bones, std::map<std::string, int>& nameIndex) {
+	std::string id{ node->first_attribute("name")->value() };
+	int index = nameIndex[id] * 16;
+	node = node->first_node();
+	std::istringstream matString{ std::string{ node->value() } };
+	matString >> bones[index];
+	matString >> bones[index + 1];
+	matString >> bones[index+2];
+	matString >> bones[index+3];
+	matString >> bones[index+4];
+	matString >> bones[index+5];
+	matString >> bones[index+6];
+	matString >> bones[index + 7];
+	matString >> bones[index + 8];
+	matString >> bones[index + 9];
+	matString >> bones[index + 10];
+	matString >> bones[index + 11];
+	matString >> bones[index + 12];
+	matString >> bones[index + 13];
+	matString >> bones[index + 14];
+	matString >> bones[index + 15];
+
+	while (true) {
+		node = node->next_sibling();
+		if (node == 0) return;
+		recursivelyGet(node, bones, nameIndex);
+	}
+	
+}
+
 bool CreateObjectFromDAEFile(const char* filename, GameObject* obj)
 {
 	std::vector<unsigned int> vertexIndices, uvIndices, normalIndices;
@@ -229,6 +260,9 @@ bool CreateObjectFromDAEFile(const char* filename, GameObject* obj)
 		unsigned int uvIndex = uvIndices[i];
 		tempVertex.uvs = tempUvs[uvIndex];
 		obj->verticies.push_back(tempVertex);
+		obj->positions.push_back(tempVertex.position);
+		obj->normals.push_back(tempVertex.normals);
+		obj->uvs.push_back(tempVertex.uvs);
 	}
 	sourceNode = doc.first_node();
 	sourceNode = sourceNode->first_node("library_controllers");
@@ -237,7 +271,7 @@ bool CreateObjectFromDAEFile(const char* filename, GameObject* obj)
 	sourceNode = sourceNode->first_node();
 	sourceNode = sourceNode->next_sibling();
 
-	std::vector<std::pair<std::string, int>> boneNameIndexPair;
+	std::map<std::string,int> boneNameIndexPair;
 	std::string temp(sourceNode->first_node()->first_attribute("count")->value());
 	std::istringstream ss(temp);
 
@@ -249,7 +283,7 @@ bool CreateObjectFromDAEFile(const char* filename, GameObject* obj)
 	for (int i = 0; i < nameCount; i++) {
 		std::string name;
 		ss >> name;
-		boneNameIndexPair.push_back(std::make_pair(name, i));
+		boneNameIndexPair[name] = i;
 	}
 
 	sourceNode = sourceNode->next_sibling();
@@ -303,21 +337,23 @@ bool CreateObjectFromDAEFile(const char* filename, GameObject* obj)
 		
 		unsigned int vertexIndex = vertexIndices[i];
 		tempVertex.position = tempVerticies[vertexIndex];
-		tempVertex.boneCount = counts[vertexIndex];
-		tempVertex.boneIndices = allindicies[vertexIndex];
-		tempVertex.boneWeights = allweights[vertexIndex];
+		tempVertex.boneIndicies = glm::vec2{ allindicies[vertexIndex][0],allindicies[vertexIndex][1] };
+		tempVertex.boneWeights = glm::vec2{ allweights[vertexIndex][0],allweights[vertexIndex][1] };
 		unsigned int normalIndex = normalIndices[i];
 		tempVertex.normals = tempNormals[normalIndex];
 		unsigned int uvIndex = uvIndices[i];
 		tempVertex.uvs = tempUvs[uvIndex];
-		obj->verticies.push_back(tempVertex);
 	}
 
 
 	sourceNode = doc.first_node();
 	sourceNode = sourceNode->first_node("library_visual_scenes");
 	sourceNode = sourceNode->first_node();
-
-
+	sourceNode = sourceNode->first_node();
+	sourceNode = sourceNode->first_node("node");
+	float* boneCollection = new float[480];
+	recursivelyGet(sourceNode,boneCollection,boneNameIndexPair);
+	obj->bones = boneCollection;
 	return true;
 }
+
