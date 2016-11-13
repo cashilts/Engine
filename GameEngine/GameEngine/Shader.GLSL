@@ -1,4 +1,3 @@
-struct 
 
 attribute vec3 vertex;
 attribute vec3 normal;
@@ -16,15 +15,16 @@ varying vec3 EyeNormal;
 void main()
 {
  vec4 newVertex;
+ mat4 testBone = mat4(1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1);
  vec4 newNormal;
  int index;
  index = int(Index.x);
- newVertex = (Bone[index]*Vertex)*Weight.x;
- newNormal = (Bone[index]*vec4(Normal,0.0)) * Weight.x;
+ newVertex = (Bone[index] * vec4(vertex,1))*Weight.x;
+ newNormal = (Bone[index] * vec4(normal,0.0)) * Weight.x;
  index = int(Index.y);
- newVertex = (Bone[index]*Vertex)*Weight.y + newVertex;
- newNormal = (Bone[index]*vec4(Normal,0.0)) *Weight.y + newNormal;
+ newVertex = (Bone[index] * vec4(vertex,1)) * Weight.y + newVertex;
+ newNormal = (Bone[index] * vec4(normal,0.0)) * Weight.y + newNormal;
  EyeNormal = vec3(ModelView * newNormal);
- gl_Position = Projection * vec4(newVertex.xyz, 1.0);
+ gl_Position = gl_ModelViewProjectionMatrix * newVertex;
  TexCoord0 = TexCoord;
 }

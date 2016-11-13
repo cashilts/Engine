@@ -40,9 +40,12 @@ struct Font {
 class Renderer
 {
 public:
-	
+	static float xPos;
+	static float yPos;
+	static float zPos;
+
 	static bool drawGlScene();
-	static bool drawGameObject(GameObject* obj);
+	static bool drawGameObject(GameObject* obj,GLuint vao);
 	static void initGl(int width, int height);
 	static void setPlayerRotation(float deltaAngle,float deltaAngleY);
 	static void writeText(const char* text, Font* font, float letterWidth, float letterHeight, float x, float y);
@@ -50,6 +53,7 @@ public:
 	static bool LoadFont(const char* filename,Font* font);
 	static void SetMenuPerspective(void);
 	static void MouseCoodinatesToScreen(float* mouseX,float* mouseY);
+	static GLuint setUpProgram(GameObject* obj);
 private:
 	static float LightAmbient[];
 	static float LightDiffuse[];

@@ -91,6 +91,9 @@ int main(int argc, char* argv[])
 	int fontId;
 	//Renderer::loadTexture("Textures/crate.bmp", &fontId);
 	GameObject testObject;
+	Renderer::xPos = 0;
+	Renderer::yPos = 0;
+	Renderer::zPos = 0;
 	//CreateObjectFromDAEFile("Models/Cube.dae",&testObject);
 	
 	//Renderer::LoadFont("Fonts/BasicLatin.fnt", &font);
@@ -109,7 +112,18 @@ int main(int argc, char* argv[])
 		{
 			if (event.type == SDL_KEYDOWN)
 			{
-				done = true;
+				switch (event.key.keysym.sym) {
+					case SDLK_ESCAPE:
+						done = true; break;
+					case SDLK_UP:
+						Renderer::zPos += 1;
+						break;
+					case SDLK_DOWN:
+						Renderer::zPos -= 1;
+						break;
+				}
+
+					
 			}
 			else if (event.type == SDL_MOUSEMOTION)
 			{

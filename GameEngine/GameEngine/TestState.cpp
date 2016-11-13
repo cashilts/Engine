@@ -1,12 +1,13 @@
 #include "TestState.h"
 
 int fontId;
+GLuint vao = 0;
 GameObject* testObject;
 
 void BasicTestingState::Update(float mouseX, float mouseY, bool mouseClick){
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
 	glScalef(0.1f, 0.1f, 0.1f);
-	Renderer::drawGameObject(testObject);
+	Renderer::drawGameObject(testObject,vao);
 }
 
 void BasicTestingState::OnStateEnter() {
@@ -22,7 +23,7 @@ void BasicTestingState::OnStateEnter() {
 	glEnable(GL_LIGHTING);
 	Renderer::loadTexture("Textures/crate.bmp", &fontId);
 	CreateObjectFromDAEFile("Models/human.dae",testObject);
-	
+	vao = Renderer::setUpProgram(testObject);
 
 }
 void BasicTestingState::OnStateExit() {

@@ -3,6 +3,11 @@
 
 //Default lighting float arrays, these values are for testing only
 //Amient and diffuse are RGBA values, position is XYZ and the way the light points
+
+float Renderer::xPos = 0;
+float Renderer::yPos = 0;
+float Renderer::zPos = 0;
+
 float Renderer::LightAmbient[] = { 0.5f,0.5f,0.5f,1 };
 float Renderer::LightDiffuse[] = { 1.0f,1.0f,1.0f,1.0f };
 float Renderer::LightPosition[] = { 0,0,0,1.0f };
@@ -11,9 +16,8 @@ float yRot = 0;
 float zRot = 0;
 
 //Player position and angle
-float xPos = 0;
-float yPos = 0;
-float zPos = 2;
+
+float theta = 0;
 
 float screenWidth;
 float screenHeight;
@@ -87,7 +91,108 @@ void Renderer::initGl(int width, int height)
 
 }
 
-bool Renderer::drawGameObject(GameObject* obj)
+GLuint Renderer::setUpProgram(GameObject* obj) {
+	GLuint pointVBO;
+	glGenBuffers(1, &pointVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, pointVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3)*obj->positions.size(), &obj->positions[0], GL_STATIC_DRAW);
+
+	GLuint normVBO;
+	glGenBuffers(1, &normVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, normVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3)*obj->normals.size(), &obj->normals[0],GL_STATIC_DRAW);
+
+	GLuint uvVBO;
+	glGenBuffers(1, &uvVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, uvVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2)*obj->uvs.size(), &obj->uvs[0], GL_STATIC_DRAW);
+
+	GLuint indiceVBO;
+	glGenBuffers(1, &indiceVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, indiceVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2)*obj->indicies.size(), &obj->indicies[0], GL_STATIC_DRAW);
+
+	GLuint weightVBO;
+	glGenBuffers(1, &weightVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, weightVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2)*obj->weights.size(), &obj->weights[0], GL_STATIC_DRAW);
+
+	GLuint vao = 0;
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+	glBindBuffer(GL_ARRAY_BUFFER, pointVBO);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, normVBO);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, uvVBO);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, indiceVBO);
+	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, weightVBO);
+	glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+	glEnableVertexAttribArray(2);
+	glEnableVertexAttribArray(3);
+	glEnableVertexAttribArray(4);
+
+	GLuint shader = glCreateShader(GL_VERTEX_SHADER);
+	std::string vertShaderStr = readFile("Shader.GLSL");
+	const char* vertShaderSrc = vertShaderStr.c_str();
+	glShaderSource(shader, 1, &vertShaderSrc, 0);
+	glCompileShader(shader);
+	GLint maxLength = 0;
+	glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
+
+	//The maxLength includes the NULL character
+	std::vector<GLchar> finfoLog(maxLength);
+	glGetShaderInfoLog(shader, maxLength, &maxLength, &finfoLog[0]);
+
+
+	GLuint fragment = glCreateShader(GL_FRAGMENT_SHADER);
+	std::string fragShaderStr = readFile("Fragment.GLSL");
+	const char* fragShaderSrc = fragShaderStr.c_str();
+	glShaderSource(fragment, 1, &fragShaderSrc, 0);
+	glCompileShader(fragment);
+	maxLength = 0;
+	glGetShaderiv(fragment, GL_INFO_LOG_LENGTH, &maxLength);
+
+	//The maxLength includes the NULL character
+	std::vector<GLchar> infoLog(maxLength);
+	glGetShaderInfoLog(fragment, maxLength, &maxLength, &infoLog[0]);
+
+
+	GLuint program = glCreateProgram();
+	glAttachShader(program, shader);
+	glAttachShader(program, fragment);
+
+
+	
+	
+
+	glBindAttribLocation(program, 0, "vertex");
+	glBindAttribLocation(program, 1, "normal");
+	glBindAttribLocation(program, 2, "TexCoord");
+	glBindAttribLocation(program, 3, "Index");
+	glBindAttribLocation(program, 4, "Weight");
+	glLinkProgram(program);
+
+	glProgramUniformMatrix4fv(program,glGetUniformLocation(program, "Bone"), 30, false, &obj->bones[0][0][0]);
+	maxLength = 0;
+	glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxLength);
+
+	//The maxLength includes the NULL character
+	std::vector<GLchar> proinfoLog(maxLength);
+	glGetProgramInfoLog(program, maxLength, &maxLength, &proinfoLog[0]);
+
+
+	glUseProgram(program);
+
+	return vao;
+}
+
+bool Renderer::drawGameObject(GameObject* obj,GLuint vao)
 {
 	float lookObjy = sin(angleY) * distance + yPos;
 	float xzRate = abs(cos(angleY) * distance);
@@ -105,56 +210,7 @@ bool Renderer::drawGameObject(GameObject* obj)
 	glRotatef(zRot, 0, 0, 1);
 
 	//Shader program set up code
-	GLuint pointVBO;
-	glGenBuffers(1, &pointVBO);
-	glBindBuffer(GL_ARRAY_BUFFER, pointVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(obj->positions)*obj->positions.size(), &obj->positions[0], GL_STATIC_DRAW);
-
-	GLuint normVBO;
-	glGenBuffers(1, &normVBO);
-	glBindBuffer(GL_ARRAY_BUFFER, normVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(obj->normals)*obj->normals.size(), &obj->normals[0], GL_STATIC_DRAW);
-
-	GLuint uvVBO;
-	glGenBuffers(1, &uvVBO);
-	glBindBuffer(GL_ARRAY_BUFFER, uvVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(obj->uvs)*obj->uvs.size(), &obj->uvs[0], GL_STATIC_DRAW);
-
-	GLuint vao = 0;
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
-	glBindBuffer(GL_ARRAY_BUFFER, pointVBO);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glBindBuffer(GL_ARRAY_BUFFER, normVBO);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glBindBuffer(GL_ARRAY_BUFFER, uvVBO);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, 0);
 	
-
-	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
-	glEnableVertexAttribArray(2);
-
-	GLuint shader = glCreateShader(GL_VERTEX_SHADER);
-	std::string vertShaderStr = readFile("Shader.GLSL");
-	const char* vertShaderSrc = vertShaderStr.c_str();
-	glShaderSource(shader, 1, &vertShaderSrc, NULL);
-	glCompileShader(shader);
-	GLuint program = glCreateProgram();
-	glAttachShader(program, shader);
-	float modelMatrix[16];
-	glGetFloatv(GL_MODELVIEW_MATRIX, modelMatrix);
-	float projectionMatrix[16];
-	glGetFloatv(GL_PROJECTION_MATRIX, projectionMatrix);
-	glUniformMatrix4fv(glGetUniformLocation(program, "ModelView"), 1, false, modelMatrix);
-	glUniformMatrix4fv(glGetUniformLocation(program, "Projection"), 1, false, projectionMatrix);
-	glUniformMatrix4fv(glGetUniformLocation(program, "Bone"), 30, false, obj->bones);
-
-	glBindAttribLocation(program, 0, "vertex");
-	glBindAttribLocation(program, 1, "normal");
-	glBindAttribLocation(program, 2, "TexCoord");
-	glLinkProgram(program);
-	glUseProgram(program);
 	if (!obj)
 	{
 		return false;
@@ -162,13 +218,12 @@ bool Renderer::drawGameObject(GameObject* obj)
 	//TODO: Replace this function with Gl drawarrays version
 	
 	glBindVertexArray(vao);
-	
 
 	glDrawArrays(GL_TRIANGLES, 0,obj->positions.size());
-
 	xRot += 0.1;
 	yRot += 0.2;
 	zRot += 0.3;
+	theta += 0.15;
 	return true;
 }
 

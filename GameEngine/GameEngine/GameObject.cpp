@@ -122,28 +122,30 @@ bool createObjectFromOBJFile(const char* filename, GameObject* obj)
 	//return true;
 }
 
-void recursivelyGet(rapidxml::xml_node<>* node, float* bones, std::map<std::string, int>& nameIndex) {
-	std::string id{ node->first_attribute("name")->value() };
-	int index = nameIndex[id] * 16;
+void recursivelyGet(rapidxml::xml_node<>* node, std::vector<glm::mat4>& bones, std::map<std::string, int>& nameIndex) {
+	std::string id{ node->first_attribute("id")->value() };
+	int index = nameIndex[id];
 	node = node->first_node();
 	std::istringstream matString{ std::string{ node->value() } };
-	matString >> bones[index];
-	matString >> bones[index + 1];
-	matString >> bones[index+2];
-	matString >> bones[index+3];
-	matString >> bones[index+4];
-	matString >> bones[index+5];
-	matString >> bones[index+6];
-	matString >> bones[index + 7];
-	matString >> bones[index + 8];
-	matString >> bones[index + 9];
-	matString >> bones[index + 10];
-	matString >> bones[index + 11];
-	matString >> bones[index + 12];
-	matString >> bones[index + 13];
-	matString >> bones[index + 14];
-	matString >> bones[index + 15];
-
+	float x0, y0, z0, w0, x1, y1, z1, w1, x2, y2, z2, w2, x3, y3, z3, w3;
+	matString >> x0;
+	matString >> y0;
+	matString >> z0;
+	matString >> w0;
+	matString >> x1;
+	matString >> y1;
+	matString >> z1;
+	matString >> w1;
+	matString >> x2;
+	matString >> y2;
+	matString >> z2;
+	matString >> w2;
+	matString >> x3;
+	matString >> y3;
+	matString >> z3;
+	matString >> w3;
+	glm::mat4 temp{ x0,y0,z0,w0,x1,y1,z1,w1,x2,y2,z2,w2,x3,y3,z3,w3 };
+	bones[index] = temp;
 	while (true) {
 		node = node->next_sibling();
 		if (node == 0) return;
@@ -259,7 +261,6 @@ bool CreateObjectFromDAEFile(const char* filename, GameObject* obj)
 		tempVertex.normals = tempNormals[normalIndex];
 		unsigned int uvIndex = uvIndices[i];
 		tempVertex.uvs = tempUvs[uvIndex];
-		obj->verticies.push_back(tempVertex);
 		obj->positions.push_back(tempVertex.position);
 		obj->normals.push_back(tempVertex.normals);
 		obj->uvs.push_back(tempVertex.uvs);
@@ -312,48 +313,101 @@ bool CreateObjectFromDAEFile(const char* filename, GameObject* obj)
 	temp = std::string(sourceNode->first_node("v")->value());
 	std::istringstream values(temp);
 	std::vector < std::pair<float*, int*>> tempBonePairs;
-	std::vector<float*>allweights;
-	std::vector<int*>allindicies;
+	std::vector<float>allweights;
+	std::vector<int>allindicies;
 	std::vector<int>counts;
+	std::vector<int>startCount;
+	int currentIndice = 0;
 	for (int i = 0; i < vertexCount; i++) {
+		startCount.push_back(currentIndice);
 		int weightCount;
-		float weights[10];
-		int boneIndicies[10];
 		vCount >> weightCount;
-		for (int i = 0; i < weightCount; i++) {
-			int weightIndex;
-			values >> boneIndicies[i];
-			values >> weightIndex;
-			weights[i] = tempBoneWeights[weightIndex];
-		}
-		allweights.push_back(weights);
-		allindicies.push_back(boneIndicies);
 		counts.push_back(weightCount);
+		for (int i = 0; i < weightCount; i++) {
+			int indice;
+			int weightIndex;
+			values >> indice;
+			values >> weightIndex;
+			float weight = tempBoneWeights[weightIndex];
+			allweights.push_back(weight);
+			allindicies.push_back(indice);
+		}
+		currentIndice += weightCount;
 	}
-
 	for (unsigned int i = 0; i < vertexIndices.size(); i++)
 	{
+		
 		vertex tempVertex;
 		
 		unsigned int vertexIndex = vertexIndices[i];
 		tempVertex.position = tempVerticies[vertexIndex];
-		tempVertex.boneIndicies = glm::vec2{ allindicies[vertexIndex][0],allindicies[vertexIndex][1] };
-		tempVertex.boneWeights = glm::vec2{ allweights[vertexIndex][0],allweights[vertexIndex][1] };
+		if (counts[vertexIndex] < 2) {
+			tempVertex.boneIndicies = glm::vec2{ allindicies[startCount[vertexIndex]],0 };
+			tempVertex.boneWeights = glm::vec2{ allweights[startCount[vertexIndex]],0 };
+
+		}
+		else{
+			tempVertex.boneIndicies = glm::vec2{ allindicies[startCount[vertexIndex]],allindicies[startCount[vertexIndex] + 1] };
+			tempVertex.boneWeights = glm::vec2{ allindicies[startCount[vertexIndex]],allindicies[startCount[vertexIndex] + 1] };
+		}
 		unsigned int normalIndex = normalIndices[i];
 		tempVertex.normals = tempNormals[normalIndex];
 		unsigned int uvIndex = uvIndices[i];
 		tempVertex.uvs = tempUvs[uvIndex];
+		obj->indicies.push_back(tempVertex.boneIndicies);
+		obj->weights.push_back(tempVertex.boneWeights);
 	}
 
-
+	sourceNode = doc.first_node();
+	sourceNode = sourceNode->first_node("library_controllers");
+	sourceNode = sourceNode->first_node();
+	sourceNode = sourceNode->first_node();
+	sourceNode = sourceNode->first_node("source");
+	sourceNode = sourceNode->next_sibling();
+	sourceNode = sourceNode->first_node();
+	//std::vector<glm::mat4> boneCollection(30);
+	std::istringstream matrixStream{ sourceNode->value() };
+	glm::mat4 binv;
+	for (int i = 0; i < nameCount; i++)
+	{
+		float x0, y0, z0, w0, x1, y1, z1, w1, x2, y2, z2, w2, x3, y3, z3, w3;
+		matrixStream >> x0;
+		matrixStream >> y0;
+		matrixStream >> z0;
+		matrixStream >> w0;
+		matrixStream >> x1;
+		matrixStream >> y1;
+		matrixStream >> z1;
+		matrixStream >> w1;
+		matrixStream >> x2;
+		matrixStream >> y2;
+		matrixStream >> z2;
+		matrixStream >> w2;
+		matrixStream >> x3;
+		matrixStream >> y3;
+		matrixStream >> z3;
+		matrixStream >> w3;
+		glm::mat4 temp{ x0,y0,z0,w0,x1,y1,z1,w1,x2,y2,z2,w2,x3,y3,z3,w3 };
+		//boneCollection[i] = temp;
+		binv *= temp;
+	}
+	obj->ibpInv =binv;
 	sourceNode = doc.first_node();
 	sourceNode = sourceNode->first_node("library_visual_scenes");
 	sourceNode = sourceNode->first_node();
 	sourceNode = sourceNode->first_node();
 	sourceNode = sourceNode->first_node("node");
-	float* boneCollection = new float[480];
-	recursivelyGet(sourceNode,boneCollection,boneNameIndexPair);
+	std::vector<glm::mat4> boneCollection(30);
+	//recursivelyGet(sourceNode,boneCollection,boneNameIndexPair);
+	//while (true) {
+	//	sourceNode = sourceNode->next_sibling();
+	//	if (sourceNode == 0) break;
+	//	recursivelyGet(sourceNode, boneCollection, boneNameIndexPair);
+	//}
 	obj->bones = boneCollection;
 	return true;
+}
+
+void GameObject::RotateBone(float degrees, int index) {
 }
 
