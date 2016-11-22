@@ -34,3 +34,7 @@ BasicTestingState::BasicTestingState()
 {
 	testObject = new GameObject();
 }
+
+BasicTestingState::~BasicTestingState() {
+	delete testObject;
+}

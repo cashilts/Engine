@@ -1,17 +1,13 @@
 #include "GameManager.h"
 
-MenuState* testState;
-BasicTestingState* testingState;
-
-
-
 
 void GameManager::GameInit()
 {
-	StateManager.insert(std::pair<std::string, GameState*>("menuTest", testState));
-	StateManager.insert(std::pair<std::string, GameState*>("TestingState", testingState));
-	currentState = testState;
-	prevState = testState;
+	
+	StateManager["menuTest"] = new MenuState{ "Menus/TestMenu.txt",this};
+	StateManager["TestingState"] = new BasicTestingState{};
+	currentState = StateManager["menuTest"];
+	prevState = currentState;
 }
 
 void GameManager::GameLoop(float mouseX, float mouseY,bool mouseClick)
@@ -25,17 +21,25 @@ void GameManager::GameLoop(float mouseX, float mouseY,bool mouseClick)
 	currentState->Update(mouseX, mouseY,mouseClick);
 }
 
-
+void GameManager::addState(GameState* toAdd, std::string name) {
+	StateManager[name] = toAdd;
+}
 
 void GameManager::ChangeState(std::string stateName)
 {
-	prevState = currentState;
-	currentState = StateManager.find(stateName)->second;
-	stateChange = true;
+	if (StateManager[stateName] != 0) {
+		prevState = currentState;
+		currentState = StateManager[stateName];
+		stateChange = true;
+	}
 }
 
 GameManager::GameManager()
 {
-	testState = new MenuState("Menus/TestMenu.txt", this, &GameManager::ChangeState);
-	testingState = new BasicTestingState();
+}
+
+GameManager::~GameManager() {
+	for (std::map<std::string, GameState*>::iterator it = StateManager.begin(); it != StateManager.end(); it++) {
+		delete it->second;
+	}
 }

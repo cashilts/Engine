@@ -43,7 +43,7 @@ Engine::Engine() {
 
 
 	//Create a platform independent open GL window
-	mainWindow = SDL_CreateWindow(windowName.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, curDisplayMode.w, curDisplayMode.h, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+	mainWindow = SDL_CreateWindow(windowName.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1024, 720, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
 
 	//If window could not be created end the program
 	if (!mainWindow)
@@ -56,7 +56,7 @@ Engine::Engine() {
 
 	SDL_GL_SetSwapInterval(1);
 
-	Renderer::initGl(curDisplayMode.w, curDisplayMode.h);
+	Renderer::initGl(1024, 720);
 
 	stateManager = new GameManager{};
 	stateManager->GameInit();
@@ -78,6 +78,6 @@ bool Engine::Update() {
 
 
 Engine::~Engine() {
-	delete mainWindow;
+	SDL_DestroyWindow(mainWindow);
 	delete stateManager;
 }

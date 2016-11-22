@@ -20,14 +20,13 @@ using namespace std;
 //Entry point
 int main(int argc, char* argv[])
 {
-	Engine myEngine{};
+	Engine *myEngine = new Engine{};
 	//Begin main loop
 	
-	while (myEngine.Update()) {
+	while (myEngine->Update()) {
 	
 	}
-
-
+	delete myEngine;
 	return 0;
 }
 

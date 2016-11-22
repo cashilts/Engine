@@ -6,4 +6,5 @@ public:
 	void OnStateEnter();
 	void OnStateExit();
 	BasicTestingState();
+	~BasicTestingState();
 };

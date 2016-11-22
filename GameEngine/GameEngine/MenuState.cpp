@@ -1,4 +1,5 @@
 #include "MenuState.h"
+#include "GameManager.h"
 
 void MenuState::Update(float mouseX, float mouseY,bool mouseClick)
 {
@@ -12,6 +13,7 @@ void MenuState::Update(float mouseX, float mouseY,bool mouseClick)
 	for (int i =0; i<length; i++)
 	{
 		menuObjects[i]->fontForMenu = &font;
+		if(menuObjects[i]->active)
 		menuObjects[i]->updateObj(mouseX, mouseY, mouseClick);
 	}
 }
@@ -36,71 +38,54 @@ void MenuState::OnStateExit()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-MenuObject* MenuState::loadMenuObject(FILE* menu)
+MenuObject* MenuState::loadMenuObject(std::ifstream& menu)
 {
-	std::string buffer;
-	fscanf_s(menu, "%s", &buffer);
-	if (strcmp(buffer.c_str(), "t") == 0)
-	{
-		MenuText newTextObj;
-
-		fscanf_s(menu, "%s", &buffer);
-		newTextObj.text = buffer.c_str();
-		fscanf_s(menu, "%f", &newTextObj.xPos);
-		fscanf_s(menu, "%f", &newTextObj.yPos);
-
+	std::string loadedObject;
+	menu >> loadedObject;
+	if (loadedObject == "t"){
 		MenuText* textPoint = new MenuText;
-		textPoint->text = newTextObj.text.c_str();
-		textPoint->xPos = newTextObj.xPos;
-		textPoint->yPos = newTextObj.yPos;
+		menu >> textPoint->text;
+		menu >> textPoint->xPos;
+		menu >> textPoint->yPos;
 		//Add each menu object into the vector 
-
+		textPoint->activateObj();
 		return textPoint;
 	}
-	else if (strcmp(buffer.c_str(), "b") == 0)
-	{
+	else if (loadedObject == "b"){
 		MenuButton* buttonPoint = new MenuButton;
-		fscanf_s(menu, "%s", &buffer);
-		buttonPoint->text = buffer.c_str();
-		fscanf_s(menu, "%f", &buttonPoint->xPos);
-		fscanf_s(menu, "%f", &buttonPoint->yPos);
-		fscanf_s(menu, "%f", &buttonPoint->width);
-		fscanf_s(menu, "%f", &buttonPoint->height);
+		menu >> buttonPoint->text;
+		menu >> buttonPoint->xPos;
+		menu >> buttonPoint->yPos;
+		menu >> buttonPoint->width;
+		menu >> buttonPoint->height;
 		buttonPoint->onClick = loadMenuObject(menu);
+		buttonPoint->activateObj();
 		return buttonPoint;
 	}
-	else if (strcmp(buffer.c_str(), "c") == 0)
-	{
+	else if (loadedObject == "c"){
 		MenuChange* changePoint = new MenuChange;
-		fscanf_s(menu, "%s", &buffer);
-		changePoint->stateName = buffer.c_str();
+		menu >> changePoint->stateName;
 		changePoint->callback = callback;
-		changePoint->fnPoint = fnPoint;
+		changePoint->activateObj();
 		return changePoint;
 	}
 }
 
-MenuState::MenuState(char* MenuFile, GameManager* callbackClass, void(GameManager::*function)(std::string))
+MenuState::MenuState(char* MenuFile, GameManager* callbackClass)
 {
 	callback = callbackClass;
-	fnPoint = function;
 
-	FILE* menu;
-	
-	errno_t e = fopen_s(&menu, MenuFile, "r");
-
-	if (menu == NULL)
-		return;
+	std::ifstream menu{ MenuFile };
 
 	
 	//All font files begin with font path followed by menu dimensions then by however menu objects are in the file
-	fscanf_s(menu, "%s", &fontName);
+	menu >> fontName;
 
-	fscanf_s(menu, "%f", &menuWidth);
-	fscanf_s(menu, "%f", &menuHeight);
+	menu >> menuWidth;
+	menu >> menuHeight;
 
 	int objectsInMenu;
-	fscanf_s(menu, "%d", &objectsInMenu);
+	menu >> objectsInMenu;
 
 	for (int i = 0; i < objectsInMenu; i++)
 	{
@@ -115,6 +100,44 @@ MenuState::MenuState(char* MenuFile, GameManager* callbackClass, void(GameManage
 MenuState::~MenuState() {
 	for each (MenuObject* obj in menuObjects)
 	{
-		free(obj);
+		delete obj;
 	}
+}
+
+void MenuState::AddMenuObject(MenuObject* obj) {
+	menuObjects.emplace_back(obj);
+}
+
+void MenuButton::updateObj(float mouseX, float mouseY, bool mouseClick) {
+	glColor3f(1, 0, 0);
+	glTranslatef(0, 0, -1);
+	glDisable(GL_TEXTURE_2D);
+	glBegin(GL_QUADS);
+	glVertex2f(xPos, yPos);
+	glVertex2f(xPos + width, yPos);
+	glVertex2f(xPos + width, yPos + height);
+	glVertex2f(xPos, yPos + height);
+	glEnd();
+	glEnable(GL_TEXTURE_2D);
+	glTranslatef(0, 0, 1);
+	glColor3f(1, 1, 1);
+	Renderer::writeText(text.c_str(), fontForMenu, 1, 1, xPos, yPos);
+
+	if (mouseClick && mouseX >= xPos && mouseX <= xPos + width && mouseY >= yPos && mouseY <= yPos + height)
+	{
+		onClick->fontForMenu = fontForMenu;
+		onClick->activateObj();
+	}
+	if (onClick->active)
+	{
+		onClick->updateObj(mouseX, mouseY, mouseClick);
+	}
+
+}
+
+void MenuChange::activateObj() {
+	callback->ChangeState(stateName);
+}
+
+void MenuChange::updateObj(float mouseX, float mouseY, bool mouseClick) {
 }

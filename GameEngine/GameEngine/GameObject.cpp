@@ -176,60 +176,40 @@ bool CreateObjectFromDAEFile(const char* filename, GameObject* obj)
 	sourceNode = sourceNode->first_node();//first <source> tag
 
 										  //Load the characters representing the verticies
-	char* vertexChars = sourceNode->first_node()->value();
+	std::istringstream vertexChars{ sourceNode->first_node()->value() };
 
 	//Temp vertex
 	glm::vec3 vert;
 
 	//Get string length 
 	int num;
-	num = strlen(vertexChars);
-	for (int i = 0; i < num;)
+	while(vertexChars >> vert.x >> vert.y >> vert.z)
 	{
-		//Scan the next 3 coordinates
-		sscanf_s(&vertexChars[i], "%f %f %f", &vert.x, &vert.y, &vert.z);
-
 		//Add the vertex into a temp list
 		tempVerticies.push_back(vert);
-
-		//Move forward in the string by the amount of characters read (once for each num read)
-		i += getIndexLen(&vertexChars[i]) + 1;
-		i += getIndexLen(&vertexChars[i]) + 1;
-		i += getIndexLen(&vertexChars[i]) + 1;
 	}
 
 	//Move to the normals source
 	sourceNode = sourceNode->next_sibling();
 
 	//Load the characters representing the normals, then repeat loading process similar to vertex loading
-	char* normalsChars = sourceNode->first_node()->value();
-
+	std::istringstream normalsChars{ sourceNode->first_node()->value() };
 	glm::vec3 norm;
 
-	num = strlen(normalsChars);
 
-	for (int i = 0; i < num;)
+	while (normalsChars >> norm.x >> norm.y >> norm.z)
 	{
-		sscanf_s(&normalsChars[i], "%f %f %f", &norm.x, &norm.y, &norm.z);
 		tempNormals.push_back(norm);
-
-		i += getIndexLen(&normalsChars[i]) + 1;
-		i += getIndexLen(&normalsChars[i]) + 1;
-		i += getIndexLen(&normalsChars[i]) + 1;
 	}
 
 	//Move to UV source, repeat the same process used to load normals and vertexs
 	sourceNode = sourceNode->next_sibling();
-	char* uvChars = sourceNode->first_node()->value();
+	std::istringstream uvChars{ sourceNode->first_node()->value() };
 
 	glm::vec2 uv;
-	num = strlen(uvChars);
-	for (int i = 0; i < num;)
+	while (uvChars >> uv.x >> uv.y)
 	{
-		sscanf_s(&uvChars[i], "%f %f", &uv.x, &uv.y);
 		tempUvs.push_back(uv);
-		i += getIndexLen(&uvChars[i]) + 1;
-		i += getIndexLen(&uvChars[i]) + 1;
 	}
 
 
@@ -405,7 +385,9 @@ bool CreateObjectFromDAEFile(const char* filename, GameObject* obj)
 	//	recursivelyGet(sourceNode, boneCollection, boneNameIndexPair);
 	//}
 	obj->bones = boneCollection;
+	doc.clear();
 	return true;
+	
 }
 
 void GameObject::RotateBone(float degrees, int index) {

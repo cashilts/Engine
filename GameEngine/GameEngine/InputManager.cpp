@@ -42,6 +42,9 @@ void InputManager::updateInputs() {
 		}
 		else if (eventCheck.type == SDL_MOUSEMOTION) {
 			SDL_GetMouseState(&mouseX, &mouseY);
+			int winX, winY;
+			SDL_GetWindowPosition(SDL_GetMouseFocus(),&winX, &winY);
+			winX += winY;
 		}
 		else if (eventCheck.type == SDL_MOUSEBUTTONDOWN) {
 			mouseClick = true;
