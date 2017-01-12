@@ -21,12 +21,12 @@ public:
 	}
 private:
 	static rapidxml::xml_node<>*constructNode(ResourceNode^ base) {
-		char* nodeName = doc->allocate_string(marshal_as<std::string>(base->Text).c_str());
+		char* nodeName = doc->allocate_string(resourceStrings[base->getType() + 1].c_str());
 		char* nodeValue = doc->allocate_string("none");
 
 		rapidxml::xml_node<>* temp = doc->allocate_node(rapidxml::node_element, nodeName, nodeValue);
-			char* attribName = doc->allocate_string(resourceStrings[base->getType() + 1].c_str());
-			char* attribValue = doc->allocate_string("Type");
+			char* attribName = doc->allocate_string(marshal_as<std::string>(base->Text).c_str());
+			char* attribValue = doc->allocate_string("Name");
 		rapidxml::xml_attribute<>* resourceKind = doc->allocate_attribute(attribValue, attribName);
 		temp->append_attribute(resourceKind);
 		TreeNodeCollection^ subNodes = base->Nodes;

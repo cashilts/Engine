@@ -16,7 +16,6 @@ enum resourceType {
 
 
 public ref class ResourceNode : public System::Windows::Forms::TreeNode {
-
 public:
 	
 
@@ -27,5 +26,5 @@ public:
 	void setType(resourceType toSet) { nodeType = toSet; }
 private:
 	resourceType nodeType;
-
+	System::String^ source;
 };

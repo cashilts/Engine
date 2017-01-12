@@ -2,7 +2,7 @@
 #include "rapidxml.hpp"
 #include "ResourceNode.h"
 #include "ResourceFile.h"
-
+#include <iostream>
 namespace Project1 {
 	using namespace System;
 	using namespace System::ComponentModel;
@@ -47,7 +47,12 @@ namespace Project1 {
 	private: System::Windows::Forms::Label^  label1;
 	private: System::Windows::Forms::ToolStripMenuItem^  saveAsToolStripMenuItem;
 	private: System::Windows::Forms::SaveFileDialog^  saveFileDialog1;
+	private: System::Windows::Forms::Label^  label2;
+	private: System::Windows::Forms::TextBox^  textBox1;
 			 ResourceNode ^currentlySelected;
+			 TreeNode ^ dragged;
+			 TreeNode ^ hovered;
+			 bool dragging = false;
 #pragma region Windows Form Designer generated code
 		/// <summary>
 		/// Required method for Designer support - do not modify
@@ -64,6 +69,8 @@ namespace Project1 {
 			this->comboBox1 = (gcnew System::Windows::Forms::ComboBox());
 			this->label1 = (gcnew System::Windows::Forms::Label());
 			this->saveFileDialog1 = (gcnew System::Windows::Forms::SaveFileDialog());
+			this->label2 = (gcnew System::Windows::Forms::Label());
+			this->textBox1 = (gcnew System::Windows::Forms::TextBox());
 			this->menuStrip1->SuspendLayout();
 			this->SuspendLayout();
 			// 
@@ -73,7 +80,10 @@ namespace Project1 {
 			this->treeView1->Name = L"treeView1";
 			this->treeView1->Size = System::Drawing::Size(121, 508);
 			this->treeView1->TabIndex = 0;
+			this->treeView1->ItemDrag += gcnew System::Windows::Forms::ItemDragEventHandler(this, &MyForm::treeView1_ItemDrag);
+			this->treeView1->NodeMouseHover += gcnew System::Windows::Forms::TreeNodeMouseHoverEventHandler(this, &MyForm::treeView1_NodeMouseHover);
 			this->treeView1->AfterSelect += gcnew System::Windows::Forms::TreeViewEventHandler(this, &MyForm::treeView1_AfterSelect_1);
+			this->treeView1->MouseUp += gcnew System::Windows::Forms::MouseEventHandler(this, &MyForm::treeView1_MouseUp);
 			// 
 			// menuStrip1
 			// 
@@ -97,14 +107,14 @@ namespace Project1 {
 			// newToolStripMenuItem
 			// 
 			this->newToolStripMenuItem->Name = L"newToolStripMenuItem";
-			this->newToolStripMenuItem->Size = System::Drawing::Size(152, 22);
+			this->newToolStripMenuItem->Size = System::Drawing::Size(114, 22);
 			this->newToolStripMenuItem->Text = L"New";
 			this->newToolStripMenuItem->Click += gcnew System::EventHandler(this, &MyForm::newToolStripMenuItem_Click);
 			// 
 			// saveAsToolStripMenuItem
 			// 
 			this->saveAsToolStripMenuItem->Name = L"saveAsToolStripMenuItem";
-			this->saveAsToolStripMenuItem->Size = System::Drawing::Size(152, 22);
+			this->saveAsToolStripMenuItem->Size = System::Drawing::Size(114, 22);
 			this->saveAsToolStripMenuItem->Text = L"Save As";
 			this->saveAsToolStripMenuItem->Click += gcnew System::EventHandler(this, &MyForm::saveAsToolStripMenuItem_Click);
 			// 
@@ -122,7 +132,7 @@ namespace Project1 {
 			// 
 			this->comboBox1->FormattingEnabled = true;
 			this->comboBox1->Items->AddRange(gcnew cli::array< System::Object^  >(3) { L"None", L"Level", L"Object" });
-			this->comboBox1->Location = System::Drawing::Point(254, 41);
+			this->comboBox1->Location = System::Drawing::Point(258, 94);
 			this->comboBox1->Name = L"comboBox1";
 			this->comboBox1->Size = System::Drawing::Size(121, 21);
 			this->comboBox1->TabIndex = 3;
@@ -132,7 +142,7 @@ namespace Project1 {
 			// label1
 			// 
 			this->label1->AutoSize = true;
-			this->label1->Location = System::Drawing::Point(172, 44);
+			this->label1->Location = System::Drawing::Point(159, 97);
 			this->label1->Name = L"label1";
 			this->label1->Size = System::Drawing::Size(76, 13);
 			this->label1->TabIndex = 4;
@@ -143,11 +153,31 @@ namespace Project1 {
 			// 
 			this->saveFileDialog1->FileOk += gcnew System::ComponentModel::CancelEventHandler(this, &MyForm::saveFileDialog1_FileOk);
 			// 
+			// label2
+			// 
+			this->label2->AutoSize = true;
+			this->label2->Location = System::Drawing::Point(151, 41);
+			this->label2->Name = L"label2";
+			this->label2->Size = System::Drawing::Size(84, 13);
+			this->label2->TabIndex = 5;
+			this->label2->Text = L"Database Name";
+			// 
+			// textBox1
+			// 
+			this->textBox1->Location = System::Drawing::Point(258, 41);
+			this->textBox1->Name = L"textBox1";
+			this->textBox1->Size = System::Drawing::Size(121, 20);
+			this->textBox1->TabIndex = 6;
+			this->textBox1->Text = L"New Database";
+			this->textBox1->KeyDown += gcnew System::Windows::Forms::KeyEventHandler(this, &MyForm::textBox1_KeyDown);
+			// 
 			// MyForm
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->ClientSize = System::Drawing::Size(1007, 597);
+			this->Controls->Add(this->textBox1);
+			this->Controls->Add(this->label2);
 			this->Controls->Add(this->label1);
 			this->Controls->Add(this->comboBox1);
 			this->Controls->Add(this->button1);
@@ -181,11 +211,14 @@ namespace Project1 {
 		if (currentlySelected->getType() >= resourceType::UNASSIGNED) {
 			this->label1->Visible = true;
 			this->comboBox1->Visible = true;
+			this->label2->Text = "Resource Name";
 		}
 		else {
 			this->label1->Visible = false;
 			this->comboBox1->Visible = false;
+			this->label2->Text = "Database Name";
 		}
+		this->textBox1->Text = currentlySelected->Text;
 		this->comboBox1->SelectedIndex = currentlySelected->getType();
 	}
 	private: System::Void button1_Click(System::Object^  sender, System::EventArgs^  e) {
@@ -203,6 +236,43 @@ namespace Project1 {
 	private: System::Void saveFileDialog1_FileOk(System::Object^  sender, System::ComponentModel::CancelEventArgs^  e) {
 		std::string url = marshal_as<std::string>(saveFileDialog1->FileName);
 		ResourceFile::treeToXmlDoc(this->treeView1, url);
+	}
+	
+	private: System::Void textBox1_TextChanged(System::Object^  sender, System::EventArgs^  e) {
+		
+	}
+	private: System::Void textBox1_KeyDown(System::Object^  sender, System::Windows::Forms::KeyEventArgs^  e) {
+		if(e->KeyCode == System::Windows::Forms::Keys::Enter) currentlySelected->Text = textBox1->Text;
+	}
+	private: System::Void treeView1_ItemDrag(System::Object^  sender, System::Windows::Forms::ItemDragEventArgs^  e) {
+		dragged = reinterpret_cast<TreeNode^>(e->Item);
+		dragging = true;
+		hovered = dragged;
+	}
+	private: System::Void treeView1_NodeMouseHover(System::Object^  sender, System::Windows::Forms::TreeNodeMouseHoverEventArgs^  e) {
+		if (dragging) {
+			hovered = e->Node;
+		}
+	}
+	private: System::Void treeView1_MouseUp(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
+		if (dragging) {
+			dragging = false;
+			if (hovered != dragged) {
+				if (hovered->Level > dragged->Level) {
+					TreeNode^ levelCheck = hovered->Parent;
+					while (true) {
+						if (levelCheck->Level == dragged->Level) {
+							if (dragged == levelCheck) return;
+							break;
+						}
+						levelCheck = levelCheck->Parent;
+					}
+				}
+				dragged->Parent->Nodes->Remove(dragged);
+				hovered->Nodes->Add(dragged);
+				
+			}
+		}
 	}
 };
 }
