@@ -52,6 +52,8 @@ namespace Project1 {
 			 ResourceNode ^currentlySelected;
 			 TreeNode ^ dragged;
 			 TreeNode ^ hovered;
+	private: System::Windows::Forms::ToolStripMenuItem^  loadToolStripMenuItem;
+	private: System::Windows::Forms::OpenFileDialog^  openFileDialog1;
 			 bool dragging = false;
 #pragma region Windows Form Designer generated code
 		/// <summary>
@@ -64,6 +66,7 @@ namespace Project1 {
 			this->menuStrip1 = (gcnew System::Windows::Forms::MenuStrip());
 			this->fileToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->newToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->loadToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->saveAsToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->button1 = (gcnew System::Windows::Forms::Button());
 			this->comboBox1 = (gcnew System::Windows::Forms::ComboBox());
@@ -71,6 +74,7 @@ namespace Project1 {
 			this->saveFileDialog1 = (gcnew System::Windows::Forms::SaveFileDialog());
 			this->label2 = (gcnew System::Windows::Forms::Label());
 			this->textBox1 = (gcnew System::Windows::Forms::TextBox());
+			this->openFileDialog1 = (gcnew System::Windows::Forms::OpenFileDialog());
 			this->menuStrip1->SuspendLayout();
 			this->SuspendLayout();
 			// 
@@ -96,9 +100,9 @@ namespace Project1 {
 			// 
 			// fileToolStripMenuItem
 			// 
-			this->fileToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(2) {
+			this->fileToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(3) {
 				this->newToolStripMenuItem,
-					this->saveAsToolStripMenuItem
+					this->loadToolStripMenuItem, this->saveAsToolStripMenuItem
 			});
 			this->fileToolStripMenuItem->Name = L"fileToolStripMenuItem";
 			this->fileToolStripMenuItem->Size = System::Drawing::Size(37, 20);
@@ -110,6 +114,13 @@ namespace Project1 {
 			this->newToolStripMenuItem->Size = System::Drawing::Size(114, 22);
 			this->newToolStripMenuItem->Text = L"New";
 			this->newToolStripMenuItem->Click += gcnew System::EventHandler(this, &MyForm::newToolStripMenuItem_Click);
+			// 
+			// loadToolStripMenuItem
+			// 
+			this->loadToolStripMenuItem->Name = L"loadToolStripMenuItem";
+			this->loadToolStripMenuItem->Size = System::Drawing::Size(114, 22);
+			this->loadToolStripMenuItem->Text = L"Load";
+			this->loadToolStripMenuItem->Click += gcnew System::EventHandler(this, &MyForm::loadToolStripMenuItem_Click);
 			// 
 			// saveAsToolStripMenuItem
 			// 
@@ -151,6 +162,7 @@ namespace Project1 {
 			// 
 			// saveFileDialog1
 			// 
+			this->saveFileDialog1->DefaultExt = L"xml";
 			this->saveFileDialog1->FileOk += gcnew System::ComponentModel::CancelEventHandler(this, &MyForm::saveFileDialog1_FileOk);
 			// 
 			// label2
@@ -170,6 +182,11 @@ namespace Project1 {
 			this->textBox1->TabIndex = 6;
 			this->textBox1->Text = L"New Database";
 			this->textBox1->KeyDown += gcnew System::Windows::Forms::KeyEventHandler(this, &MyForm::textBox1_KeyDown);
+			// 
+			// openFileDialog1
+			// 
+			this->openFileDialog1->FileName = L"openFileDialog1";
+			this->openFileDialog1->FileOk += gcnew System::ComponentModel::CancelEventHandler(this, &MyForm::openFileDialog1_FileOk);
 			// 
 			// MyForm
 			// 
@@ -273,6 +290,14 @@ namespace Project1 {
 				
 			}
 		}
+	}
+	private: System::Void loadToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
+		openFileDialog1->ShowDialog();
+	}
+	private: System::Void openFileDialog1_FileOk(System::Object^  sender, System::ComponentModel::CancelEventArgs^  e) {
+		ResourceNode^ newHead = ResourceFile::xmlToTree(marshal_as<std::string>(this->openFileDialog1->FileName));
+		this->treeView1->Nodes->Clear();
+		this->treeView1->Nodes->Add(newHead);
 	}
 };
 }

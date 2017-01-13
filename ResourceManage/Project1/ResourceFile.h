@@ -19,8 +19,32 @@ public:
 		outputFile << *doc;
 		outputFile.close();
 	}
+
+	static ResourceNode^ xmlToTree(std::string filename) {
+		rapidxml::file<> xml{ filename.c_str() };
+		doc->parse<0>(xml.data());
+		ResourceNode^ head = constructTree(doc->first_node());
+		return head;
+	}
 private:
-	static rapidxml::xml_node<>*constructNode(ResourceNode^ base) {
+
+	static ResourceNode^ constructTree(rapidxml::xml_node<> *node) {
+		ResourceNode^ temp = gcnew ResourceNode{};
+		temp->Text = gcnew System::String{ node->first_attribute()->value() };
+		node = node->first_node();
+		while (true) {
+			if (node && node->first_node()) {
+				temp->Nodes->Add(constructTree(node));
+			}
+			else {
+				break;
+			}
+			node = node->next_sibling();
+		}
+		return temp;
+	}
+
+	static rapidxml::xml_node<>* constructNode(ResourceNode^ base) {
 		char* nodeName = doc->allocate_string(resourceStrings[base->getType() + 1].c_str());
 		char* nodeValue = doc->allocate_string("none");
 
