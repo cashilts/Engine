@@ -92,44 +92,20 @@ void Renderer::initGl(int width, int height)
 }
 
 GLuint Renderer::setUpProgram(GameObject* obj) {
-	GLuint pointVBO;
-	glGenBuffers(1, &pointVBO);
-	glBindBuffer(GL_ARRAY_BUFFER, pointVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3)*obj->positions.size(), &obj->positions[0], GL_STATIC_DRAW);
-
-	GLuint normVBO;
-	glGenBuffers(1, &normVBO);
-	glBindBuffer(GL_ARRAY_BUFFER, normVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3)*obj->normals.size(), &obj->normals[0],GL_STATIC_DRAW);
-
-	GLuint uvVBO;
-	glGenBuffers(1, &uvVBO);
-	glBindBuffer(GL_ARRAY_BUFFER, uvVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2)*obj->uvs.size(), &obj->uvs[0], GL_STATIC_DRAW);
-
-	GLuint indiceVBO;
-	glGenBuffers(1, &indiceVBO);
-	glBindBuffer(GL_ARRAY_BUFFER, indiceVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2)*obj->indicies.size(), &obj->indicies[0], GL_STATIC_DRAW);
-
-	GLuint weightVBO;
-	glGenBuffers(1, &weightVBO);
-	glBindBuffer(GL_ARRAY_BUFFER, weightVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2)*obj->weights.size(), &obj->weights[0], GL_STATIC_DRAW);
+	GLuint vertexVBO;
+	glGenBuffers(1, &vertexVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, vertexVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3)*obj->verticies.size(), &obj->verticies[0].position, GL_STATIC_DRAW);
 
 	GLuint vao = 0;
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
-	glBindBuffer(GL_ARRAY_BUFFER, pointVBO);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glBindBuffer(GL_ARRAY_BUFFER, normVBO);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glBindBuffer(GL_ARRAY_BUFFER, uvVBO);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, 0);
-	glBindBuffer(GL_ARRAY_BUFFER, indiceVBO);
-	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 0, 0);
-	glBindBuffer(GL_ARRAY_BUFFER, weightVBO);
-	glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, vertexVBO);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), 0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), reinterpret_cast<void*>(sizeof(glm::vec3)));
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(vertex), reinterpret_cast<void*>(sizeof(glm::vec3)*2));
+	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(vertex), reinterpret_cast<void*>(sizeof(glm::vec3)*2 + sizeof(glm::vec2)));
+	glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE, sizeof(vertex), reinterpret_cast<void*>(sizeof(glm::vec3)*2 + sizeof(glm::vec2)*2));
 
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
@@ -219,7 +195,7 @@ bool Renderer::drawGameObject(GameObject* obj,GLuint vao)
 	
 	glBindVertexArray(vao);
 
-	glDrawArrays(GL_TRIANGLES, 0,obj->positions.size());
+	glDrawArrays(GL_TRIANGLES, 0,obj->verticies.size());
 	xRot += 0.1;
 	yRot += 0.2;
 	zRot += 0.3;

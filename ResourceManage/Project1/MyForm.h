@@ -54,6 +54,8 @@ namespace Project1 {
 			 TreeNode ^ hovered;
 	private: System::Windows::Forms::ToolStripMenuItem^  loadToolStripMenuItem;
 	private: System::Windows::Forms::OpenFileDialog^  openFileDialog1;
+	private: System::Windows::Forms::ListBox^  listBox1;
+	private: System::Windows::Forms::Button^  dependancyAdd;
 			 bool dragging = false;
 #pragma region Windows Form Designer generated code
 		/// <summary>
@@ -75,6 +77,8 @@ namespace Project1 {
 			this->label2 = (gcnew System::Windows::Forms::Label());
 			this->textBox1 = (gcnew System::Windows::Forms::TextBox());
 			this->openFileDialog1 = (gcnew System::Windows::Forms::OpenFileDialog());
+			this->listBox1 = (gcnew System::Windows::Forms::ListBox());
+			this->dependancyAdd = (gcnew System::Windows::Forms::Button());
 			this->menuStrip1->SuspendLayout();
 			this->SuspendLayout();
 			// 
@@ -188,11 +192,32 @@ namespace Project1 {
 			this->openFileDialog1->FileName = L"openFileDialog1";
 			this->openFileDialog1->FileOk += gcnew System::ComponentModel::CancelEventHandler(this, &MyForm::openFileDialog1_FileOk);
 			// 
+			// listBox1
+			// 
+			this->listBox1->FormattingEnabled = true;
+			this->listBox1->Location = System::Drawing::Point(556, 41);
+			this->listBox1->Name = L"listBox1";
+			this->listBox1->Size = System::Drawing::Size(381, 95);
+			this->listBox1->TabIndex = 7;
+			this->listBox1->Visible = false;
+			// 
+			// dependancyAdd
+			// 
+			this->dependancyAdd->Location = System::Drawing::Point(556, 158);
+			this->dependancyAdd->Name = L"dependancyAdd";
+			this->dependancyAdd->Size = System::Drawing::Size(141, 23);
+			this->dependancyAdd->TabIndex = 8;
+			this->dependancyAdd->Text = L"Add New Dependancy";
+			this->dependancyAdd->UseVisualStyleBackColor = true;
+			this->dependancyAdd->Visible = false;
+			// 
 			// MyForm
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->ClientSize = System::Drawing::Size(1007, 597);
+			this->Controls->Add(this->dependancyAdd);
+			this->Controls->Add(this->listBox1);
 			this->Controls->Add(this->textBox1);
 			this->Controls->Add(this->label2);
 			this->Controls->Add(this->label1);
@@ -228,11 +253,15 @@ namespace Project1 {
 		if (currentlySelected->getType() >= resourceType::UNASSIGNED) {
 			this->label1->Visible = true;
 			this->comboBox1->Visible = true;
+			this->listBox1->Visible = true;
+			this->dependancyAdd->Visible = true;
 			this->label2->Text = "Resource Name";
 		}
 		else {
 			this->label1->Visible = false;
 			this->comboBox1->Visible = false;
+			this->listBox1->Visible = false;
+			this->dependancyAdd->Visible = false;
 			this->label2->Text = "Database Name";
 		}
 		this->textBox1->Text = currentlySelected->Text;

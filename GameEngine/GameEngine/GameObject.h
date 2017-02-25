@@ -2,6 +2,10 @@
 #include <glm.hpp>
 #include <vector>
 
+//Game object contains classes and functions for managing and controlling 3d models
+
+const int MAX_WEIGHTS = 2;
+
 struct vertex {
 	glm::vec3 position;
 	glm::vec3 normals;
@@ -13,6 +17,8 @@ struct vertex {
 class GameObject {
 public:
 	//Model information
+	std::vector<vertex> verticies;
+
 	std::vector<glm::vec3> positions;
 	std::vector<glm::vec3> normals;
 	std::vector<glm::vec2> uvs;
@@ -27,5 +33,4 @@ protected:
 	float zPos;
 };
 
-bool createObjectFromOBJFile(const char* filename, GameObject* obj);
 bool CreateObjectFromDAEFile(const char* filename, GameObject* obj);

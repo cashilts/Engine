@@ -24,7 +24,10 @@ public:
 
 	resourceType getType() { return nodeType; }
 	void setType(resourceType toSet) { nodeType = toSet; }
+
+	void addDependancy(String^ toAdd) { dependancies->Add(toAdd); }
 private:
 	resourceType nodeType;
 	System::String^ source;
+	System::Collections::ArrayList^ dependancies = gcnew System::Collections::ArrayList{};
 };
