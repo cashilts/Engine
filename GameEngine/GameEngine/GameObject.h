@@ -18,13 +18,9 @@ class GameObject {
 public:
 	//Model information
 	std::vector<vertex> verticies;
-
-	std::vector<glm::vec3> positions;
-	std::vector<glm::vec3> normals;
-	std::vector<glm::vec2> uvs;
-	std::vector<glm::vec2> indicies;
-	std::vector<glm::vec2> weights;
 	std::vector<glm::mat4> bones;
+	std::vector<glm::mat4> invTBone;
+	std::vector<glm::mat4> bindMatrix; 
 	glm::mat4 ibpInv;
 	void RotateBone(float degrees, int index);
 protected:

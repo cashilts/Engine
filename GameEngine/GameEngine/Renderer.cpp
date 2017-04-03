@@ -95,7 +95,7 @@ GLuint Renderer::setUpProgram(GameObject* obj) {
 	GLuint vertexVBO;
 	glGenBuffers(1, &vertexVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, vertexVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3)*obj->verticies.size(), &obj->verticies[0].position, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex)*obj->verticies.size(), &obj->verticies[0], GL_STATIC_DRAW);
 
 	GLuint vao = 0;
 	glGenVertexArrays(1, &vao);
@@ -155,6 +155,7 @@ GLuint Renderer::setUpProgram(GameObject* obj) {
 	glLinkProgram(program);
 
 	glProgramUniformMatrix4fv(program,glGetUniformLocation(program, "Bone"), 30, false, &obj->bones[0][0][0]);
+	glProgramUniformMatrix3fv(program, glGetUniformLocation(program, "invTBone"), 30, false, &obj->invTBone[0][0][0]);
 	maxLength = 0;
 	glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxLength);
 
@@ -180,7 +181,7 @@ bool Renderer::drawGameObject(GameObject* obj,GLuint vao)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
 	gluLookAt(xPos, yPos, zPos, lookObjx, lookObjy, lookObjz, 0, 1, 0);
-	glTranslatef(0.0, 0.0, -20);
+	glTranslatef(0.0, 0.0, -50);
 	glRotatef(xRot, 1.0, 0, 0);
 	glRotatef(yRot, 0, 1.0, 0);
 	glRotatef(zRot, 0, 0, 1);
@@ -195,7 +196,7 @@ bool Renderer::drawGameObject(GameObject* obj,GLuint vao)
 	
 	glBindVertexArray(vao);
 
-	glDrawArrays(GL_TRIANGLES, 0,obj->verticies.size());
+	glDrawArrays(GL_TRIANGLES, 0,obj->verticies.size() * sizeof(vertex));
 	xRot += 0.1;
 	yRot += 0.2;
 	zRot += 0.3;

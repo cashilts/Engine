@@ -8,6 +8,7 @@ attribute vec2 Weight;
 uniform mat4 ModelView;
 uniform mat4 Projection;
 uniform mat4 Bone[30];
+uniform mat4 invTBone[30];
 
 varying vec2 TexCoord0;
 varying vec3 EyeNormal;
@@ -15,7 +16,6 @@ varying vec3 EyeNormal;
 void main()
 {
  vec4 newVertex;
- mat4 testBone = mat4(1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1);
  vec4 newNormal;
  int index;
  index = int(Index.x);

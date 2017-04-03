@@ -22,7 +22,7 @@ void BasicTestingState::OnStateEnter() {
 
 	glEnable(GL_LIGHTING);
 	Renderer::loadTexture("Textures/crate.bmp", &fontId);
-	CreateObjectFromDAEFile("Models/human.dae",testObject);
+	CreateObjectFromDAEFile("Models/boneCube.dae",testObject);
 	vao = Renderer::setUpProgram(testObject);
 
 }
